@@ -1,0 +1,1880 @@
+.. _cfg:
+
+============
+Docutils配置
+============
+
+.. sidebar:: 对于网络应用程序的Docutils安全性
+
+   关于安全的网络应用细节，详见 `安全的部署Docutils <../howto/security.html>`_.
+
+
+.. _cfg-configuration-files:
+
+--------
+配置文件
+--------
+
+配置文件用来持久化自定义。
+它们可以只设置一次但在每次你使用前端工具时生效。
+配置文件设置会覆盖内建的默认设置，
+而命令行选项会覆盖所有其他设置。
+
+默认情况下，Docutils会检查下列地方以获取配置文件。
+按如下顺序:
+
+1. ``/etc/docutils.conf``: 这是一个系统范围的配置文件，
+   系统中的所有Docutils进程均可调用。
+
+2. ``./docutils.conf``: 这是一个指定项目的配置文件，
+   其存放于当前文件夹。
+   Docutils前端会从包含配置文件的文件夹被执行，
+   以便其对生效(注意，这个位置可能与源文件存放的位置无关)。
+   项目指定的配置文件中的设置会覆盖系统范围内的对应设置。
+
+3. ``~/.docutils``: 这是一个指定用户的配置文件，
+   其存放于用户的home文件夹中。
+   该文件中的设置会覆盖系统范围和项目指定的配置文件中的对应设置。
+
+如果发现多于一个配置文件，所有的都会被读入，但之后的条目会覆盖之前的条目。
+例如，指定用户的配置文件中的一个 "stylesheet" 条目会覆盖系统范围的配置文件
+中的 "stylesheet" 条目。
+
+默认隐式配置文件的路径可能会被 
+``DOCUTILSCONFIG`` 环境变量所覆盖。
+``DOCUTILSCONFIG`` 应该包含一个逗号分隔的(在Windows中使用分号分隔)用于搜索的配置文件路径。让其为空会禁用隐式配置文件。
+波浪线缩写会被用在路径中。
+路径被解释为当前工作目录的相对路径。
+空路径项目会被忽略。
+
+另外，可以使用 "--config" 命令行选项来显式指定一个配置文件。
+该配置文件会在上述三个隐式配置文件之后被读取(或 ``DOCUTILSCONFIG`` 环境变量定义的那个), 其条目会具有优先级。
+
+.. _cfg-configuration-file-syntax:
+
+------------
+配置文件语法
+------------
+
+配置文件是使用UTF-8编码的文本文件。
+使用 Python_ 的标准库中的 ConfigParser.py_ 模块来读取它们。
+根据其文档:
+
+    配置文件由节组成，由采用 "[section]" header打头，
+    其后跟着连续的 `RFC 822`_ 风格的"name: value"条目；
+    "name=value" 也能接受。
+    注意，值前面的空白符会被移除。
+    以 "#" 或 ";" 开始的行会被忽略，其可能用来提供注释。
+
+.. Note:: 不会插入格式字符串。
+
+配置文件条目名称对应于内部运行时设置。
+下划线("_")和连字符("-")可以用来内部修改条目名称。
+连字符会自动转为下划线。
+
+对于on/off开关设置项(_`booleans`), 下列值可以识别:
+
+:On: "true", "yes", "on", "1"
+:Off: "false", "no", "off", "0", "" (no value)
+
+.. _list:
+
+列表中可以使用逗号或分号分隔。
+
+strip_classes_, strip_elements_with_classes_, stylesheet, 和
+stylesheet_path 使用逗号分隔，
+包裹列表值的空白符会被删除::
+
+    strip-classes: ham,eggs,
+    strip-elements-with-classes: sugar, salt, flour
+    stylesheet: html4css1.css,
+                math.css,
+                style with spaces.css
+    stylesheet-path: ../styles/my.css, ../styles/funny.css
+
+expose_internals_, ignore_ 和 prune_ 使用分号分隔，不去除空白符::
+
+    expose_internals: b:c:d
+
+.. _cfg-example:
+
+示例
+====
+
+这是Docutils使用的 ``tools/docutils.conf`` 配置文件的内容::
+
+    # These entries affect all processing:
+    [general]
+    source-link: yes
+    datestamp: %Y-%m-%d %H:%M UTC
+    generator: on
+
+    # These entries affect HTML output:
+    [html4css1 writer]
+    # Required for docutils-update, the website build system:
+    stylesheet-path: ../docutils/writers/html4css1/html4css1.css
+    embed-stylesheet: no
+    field-name-limit: 20
+
+独立的配置节和设置在下面的章节中讲述。
+
+.. _cfg-configuration-file-sections-and-entries:
+
+------------------
+配置文件章节和条目
+------------------
+
+下面是Docutils的运行时设置，在配置文件节中列出。
+任何设置都可以在任意节指定，但只有活动节的设置会被应用。
+节对应Docutils的组件(模型名或别名; 节名只能使用小写字母)。
+每个 `Docutils应用 <Docutils application_>`_ 都会使用一个特定组件集合; 
+对应配置文件节会在应用被使用时应用。
+配置节以"通用-指定"的顺序被应用，如下:
+
+1. `[general]`_
+
+2. `[parsers]`_, 解析器依赖，节通过("[... parser]")指定给Parser。
+   目前，只能调用 `[restructuredtext parser]`_ 
+
+3. `[readers]`_, reader依赖，节通过("[... reader]")指定给Reader。
+   例如， `[pep reader]`_ 依赖于 `[standalone reader]`_.
+
+4. `[writers]`_, writer依赖，节通过("[... writer]")指定给Writer。
+   例如， `[pep_html writer]`_ 依赖于 `[html4css1 writer]`_.
+
+5. `[applications]`_, 应用程序依赖, 节通过("[... application]")
+   指定给应用(前端工具)。
+
+因为任何设置都可以指定给任何节，该顺序允许组件或应用指定覆盖之前的设置。
+例如，Reader指定可能覆盖通用设置；
+Writer指定可能覆盖解析器设置;
+应用指定可能覆盖Writer设置; 等等。
+
+如果多个配置文件都是可调用的，
+这个过程会为每一个都完成(所有节都会以指定顺序应用)，然后在进入下一个。
+例如，在之前的配置文件中设置的 "[pep_html writer] stylesheet" 设置
+可能会被之后的文件中的 "[html4css1 writer] stylesheet" 设置覆盖。
+
+某些 Python_ 只是被假设为某些属性。
+
+.. _ConfigParser.py:
+   http://www.python.org/doc/current/lib/module-ConfigParser.html
+.. _Python: http://www.python.org/
+.. _RFC 822: http://www.rfc-editor.org/rfc/rfc822.txt
+.. _Docutils application: tools.html
+
+.. _cfg-general:
+
+[general]
+=========
+
+"[general]"节中的设置总会被应用。
+
+.. _cfg-auto-id-prefix:
+
+auto_id_prefix
+--------------
+
+文档中所有自动生成的ID都会被加上 id_prefix_ 前缀。
+
+默认: "id".
+选项: ``--auto-id-prefix`` (隐藏，主要用于编程使用)。
+
+.. _cfg-datestamp:
+
+datestamp
+---------
+
+在文档脚注中抱哈哪一个time/datestamp。
+为Python的 ``time.strftime`` 包含一个格式化字符串。
+见 `time模块文档`__.
+
+默认: None.
+选项: ``--date, -d, --time, -t, --no-datestamp``.
+
+配置文件条目示例::
+
+    # Equivalent to --date command-line 选项, results in
+    # ISO 8601 extended format datestamp, e.g. "2001-12-21":
+    datestamp: %Y-%m-%d
+
+    # Equivalent to --time command-line 选项, results in
+    # date/timestamp like "2001-12-21 18:43 UTC":
+    datestamp: %Y-%m-%d %H:%M UTC
+
+    # Disables datestamp; equivalent to --no-datestamp:
+    datestamp:
+
+__ http://www.python.org/doc/current/lib/module-time.html
+
+.. _cfg-debug:
+
+debug
+-----
+
+报告调试级别系统信息。
+
+默认: 不报告 (None).  选项: ``--debug, --no-debug``.
+
+.. _cfg-dump-internals:
+
+dump_internals
+--------------
+
+在处理的最后，输出文档所有的内部属性(``document.__dict__``)到标准错误流。
+
+默认: 不输出 (None).
+选项: ``--dump-internals`` (隐藏，仅为开发使用).
+
+.. _cfg-dump-pseudo-xml:
+
+dump_pseudo_xml
+---------------
+
+在处理的最后, 输出文档的伪XML形式到标准错误流。
+
+默认: 不输出 (None)
+选项: ``--dump-pseudo-xml`` (隐藏，仅为开发使用).
+
+.. _cfg-dump-settings:
+
+dump_settings
+-------------
+
+在处理的最后, 输出所有Docutils设置到标准错误流。
+
+默认: 不输出 (None)
+选项: ``--dump-settings`` (隐藏，仅为开发使用).
+
+.. _cfg-dump-transforms:
+
+dump_transforms
+---------------
+
+在处理的最后, 输出所有应用到文档的transforms的列表到标准错误流。
+
+默认: 不输出 (None)
+选项: ``--dump-transforms`` (隐藏，仅为开发使用).
+
+.. _cfg-error-encoding:
+
+error_encoding
+--------------
+
+错误输出的文本编码。
+
+默认: "ascii".  选项: ``--error-encoding, -e``.
+
+.. _cfg-error-encoding-error-handler:
+
+error_encoding_error_handler
+----------------------------
+
+错误输出中的不可编码字符的错误处理。
+查看 output_encoding_error_handler_ 获取可接受的值。
+
+默认: "backslashreplace"
+选项: ``--error-encoding-error-handler, --error-encoding, -e``.
+
+.. _cfg-exit-status-level:
+
+exit_status_level
+-----------------
+
+系统信息级别阀值; 大于等于该级别的不停机系统信息会在普通exit中
+生成一个非零退出状态。
+退出状态是最高系统信息级别乘以10(INFO是11，等等)。
+
+默认: 禁用 (5).  选项: ``--exit-status``.
+
+.. _cfg-expose-internals:
+
+expose_internals
+----------------
+
+暴露为扩展属性的内部属性的 `列表 <List_>`_ (使用"internal:" 命名空间前缀)。
+想在配置文件中指定多个属性，使用冒号分隔名称;
+在命令行中，该选项可能不止一次使用。
+
+默认: 不输出 (None)
+选项: ``--expose-internal-attribute`` (隐藏，仅为开发使用).
+
+.. _cfg-footnote_backlinks:
+
+footnote_backlinks
+------------------
+
+开启或禁用脚注和引文的反引用。
+
+默认: enabled (1).
+选项: ``--footnote-backlinks, --no-footnote-backlinks``.
+
+.. _cfg-generator:
+
+generator
+---------
+
+在文档底部包含一个 "Generated by Docutils" 认证和链接。
+
+默认: off (None).  选项: ``--generator, -g, --no-generator``.
+
+.. _cfg-halt_level:
+
+halt_level
+----------
+
+阀值，大于等于它的系统信息会被转化为异常，立即停止执行。
+如果设置了 `traceback`_ ，该异常会发送，Docutils会退出。
+
+默认: severe (4).  选项: ``--halt, --strict``.
+
+.. _cfg-id_prefix:
+
+id_prefix
+---------
+
+所有在文档中生成的ID的前缀。
+参见 auto_id_prefix_.
+
+默认: "" (empty).
+选项: ``--id-prefix`` (隐藏，仅为编程使用).
+
+.. _cfg-input-encoding:
+
+input_encoding
+--------------
+
+输入文本的编码。
+
+默认: auto-detect (None).  选项: ``--input-encoding, -i``.
+
+.. _cfg-input_encoding_error_handler:
+
+input_encoding_error_handler
+----------------------------
+
+输入中的不可编码字符的错误处理。
+可接受的值包括:
+
+strict
+    在编码错误时抛出一个异常
+replace
+    使用官方Unicode替换字符 U+FFFD 替换畸形数据
+ignore
+    忽略畸形数据并继续，而不提醒
+
+可接受的值与Python的 ``unicode`` 函数的"error"参数一样; 
+其他值可以定义在应用或Python将来某个版本中。
+
+默认: "strict".
+选项: ``--input-encoding-error-handler, --input-encoding, -i``.
+
+.. _cfg-language_code:
+
+language_code
+-------------
+
+`BCP 47`_ 中定义的大小写不敏感 `language tag`_ 。
+
+设置文档语言，也用来本地化指令和角色名称以及Docutils生成的文本。
+
+一个典型的语言识别符由 `ISO 639`_ (3-letter codes can be used if no 2-letter code
+exists) 中定义的2字符语言代码组成。
+语言识别符可以有一个可选的子标签，
+通常是基于国家的变体(从 `ISO 3166`_ 2字符国家代码中选取)。
+避免使用子标签除非他们添加了有用的识别信息。
+语言标签的示例包括 "fr", "en-GB", "pt-br" (与 "pt-BR" 一样), 和
+"de-1901" (使用 pre-1996 拼写的德语)。
+
+文档部分的语言可以使用"language-<language tag>" `类属性 <class attribute_>`_ 来指定，如
+``.. class:: language-el-polyton`` 引用多声调希腊语。
+
+默认: English ("en").  选项: ``--language, -l``.
+
+.. _class attribute: ../ref/doctree.html#classes
+
+.. _cfg-output_encoding:
+
+output_encoding
+---------------
+
+输出文本的编码。
+
+默认: "UTF-8".  选项: ``--output-encoding, -o``.
+
+.. _cfg-output_encoding_error_handler:
+
+output_encoding_error_handler
+-----------------------------
+
+输出中的不可编码字符的错误处理。
+可接受的值包括:
+
+strict
+    在编码错误时抛出一个异常
+replace
+    使用一个合适的替代标记，如"?"，代替畸形数据
+ignore
+    忽略畸形数据并继续，而不提醒
+xmlcharrefreplace
+    使用合适的XML字符引用，如"``&#8224;``"，来替代
+backslashreplace
+    使用反斜杠转移序列，如"``\u2020``"，来替代。
+
+接受的值与Python的 ``encode`` 字符串方法的 "error" 参数相同; 
+其他值可能在应用或Python将来某个版本中定义。
+
+默认: "strict".
+选项: ``--output-encoding-error-handler, --output-encoding, -o``.
+
+.. _cfg-record_dependencies:
+
+record_dependencies
+-------------------
+
+Docutils会输出的生成输出所需要的文件列表的文件的路径。
+如被包含的文件或嵌套的样式表 [#dependencies]_. 
+[#pwd]_ 格式为每行一个路径，以前置斜线分隔，编码为 ``utf8``.
+
+设置为 ``-`` 会输出依赖到标准输出流。
+
+该选项在链接程序如 ``make`` 使用 ``Makefile`` 规则时特别有用::
+
+  ham.html: ham.txt $(shell cat hamdeps.txt)
+    rst2html.py --record-dependencies=hamdeps.txt ham.txt ham.html
+
+如果文件系统不使用utf8编码，将 ``cat`` 命令替换为转换器(converter)的调用，如::
+
+  $(shell iconv -f utf8 -t latin1 hamdeps.txt)
+
+默认: None.  选项: ``--record-dependencies``.
+
+.. _cfg-report_level:
+
+report_level
+------------
+
+当级别大于等于 <level> 时，报告系统信息:
+
+1  info
+2  warning
+3  error
+4  severe
+5  none
+
+默认: warning (2).
+选项: ``--report, -r, --verbose, -v, --quiet, -q``.
+
+.. _cfg-sectnum_xform:
+
+sectnum_xform
+-------------
+
+通过Docutils(docutils.transforms.parts.SectNum) `sectnum
+directive`_ 指令，开启或禁用自动节编号。
+
+如果禁用，节编号可能被渲染器(如 LaTeX 或通过一个CSS样式定义)添加到输出.
+
+默认: enabled (1).
+选项: ``--section-numbering``, ``--no-section-numbering``.
+
+.. _sectnum directive: ../ref/rst/directives.html#sectnum
+
+.. _cfg-source_link:
+
+source_link
+-----------
+
+在文档的脚注处包含一个"View document source"链接。URL会被关联到目标。
+
+默认: 不输出 (None)
+选项: ``--source-link, -s, --no-source-link``.
+
+.. _cfg-source_url:
+
+source_url
+----------
+
+"View document source"链接的一个显式URL，原样使用.
+
+默认: compute if source_link (None).
+选项: ``--source-url, --no-source-link``.
+
+.. _cfg-strict_visitor:
+
+strict_visitor
+--------------
+
+当使用访客(Visitor)模式处理一个文档树时，如果writer不支持作为可选的列出的节点类型，抛出一个错误。
+仅为传统开发使用。
+
+默认: 禁用 (None).
+选项: ``--strict-visitor`` (隐藏，仅为开发使用).
+
+.. _cfg-strip_classes:
+
+strip_classes
+-------------
+
+逗号分隔"classes"属性值的 `列表 <list_>`_ ，以便从文档树的所有元素中移除。
+命令行选项可以被多次使用。
+
+.. WARNING:: 潜在危险，应该小心使用。
+
+默认: 禁用 (None).  选项: ``--strip-class``.
+
+.. _cfg-strip_comments:
+
+strip_comments
+--------------
+
+开启文档树中注释元素的移除。
+
+默认: 禁用 (None).
+选项: ``--strip-comments``, ``--leave-comments``.
+
+.. _cfg-strip_elements_with_classes:
+
+strip_elements_with_classes
+---------------------------
+
+逗号分隔的"classes"属性值的 `列表 <list_>`_ 。
+匹配的元素会从文档树中移除。
+命令行选项可能被多次使用。
+
+.. WARNING:: 潜在危险，应该小心使用。
+
+默认: 禁用 (None).  选项: ``--strip-element-with-class``.
+
+.. _cfg-title:
+
+title
+-----
+
+作为元数据的文档标题，其不会变为文档正文的一部分。
+它会覆盖一个文档提供的标题。
+例如，在HTML输出中，元数据文档标题出现在浏览器窗口的标题栏中。
+
+默认: none.  选项: ``--title``.
+
+.. _cfg-toc_backlinks:
+
+toc_backlinks
+-------------
+
+Enable backlinks from section titles to table of contents entries
+("entry"), to the top of the TOC ("top"), or disable ("none").
+
+默认: "entry".
+选项: ``--toc-entry-backlinks, --toc-top-backlinks, --no-toc-backlinks``.
+
+.. _cfg-traceback:
+
+traceback
+---------
+
+Enable Python tracebacks when halt-level system messages and other
+exceptions occur.  Useful for debugging, and essential for issue
+reports.  Exceptions are allowed to propagate, instead of being
+caught and reported (in a user-friendly way) by Docutils.
+
+默认: 禁用 (None) unless Docutils is run programmatically
+using the `Publisher Interface`_.
+选项: ``--traceback, --no-traceback``.
+
+.. _Publisher Interface: ../api/publisher.html
+
+.. _cfg-warning_stream:
+
+warning_stream
+--------------
+
+Path to a file for the output of system messages (warnings) [#pwd]_.
+
+默认: stderr (None).  选项: ``--warnings``.
+
+
+[parsers]
+=========
+
+Docutils currently supports only one parser, for reStructuredText.
+
+
+[restructuredtext parser]
+-------------------------
+
+.. _cfg-file-insertion-enabled:
+
+file_insertion_enabled
+~~~~~~~~~~~~~~~~~~~~~~
+
+Enable or disable directives that insert the contents of external
+files, such as the "include_" & "raw_".  A "warning" system
+message (including the directive text) is inserted instead.  (See
+also raw_enabled_ for another security-relevant setting.)
+
+默认: enabled (1).
+选项: ``--file-insertion-enabled, --no-file-insertion``.
+
+.. _include: ../ref/rst/directives.html#include
+.. _raw: ../ref/rst/directives.html#raw
+
+pep_references
+~~~~~~~~~~~~~~
+
+Recognize and link to standalone PEP references (like "PEP 258").
+
+默认: 禁用 (None); enabled (1) in PEP Reader.
+选项: ``--pep-references``.
+
+pep_base_url
+~~~~~~~~~~~~
+Base URL for PEP references.
+
+默认: "http://www.python.org/peps/".
+选项: ``--pep-base-url``.
+
+pep_file_url_template
+~~~~~~~~~~~~~~~~~~~~~
+
+Template for PEP file part of URL, interpolated with the PEP
+number and appended to pep_base_url_.
+
+默认: "pep-%04d".  选项: ``--pep-file-url``.
+
+.. _cfg-raw-enabled:
+
+raw_enabled
+~~~~~~~~~~~
+
+Enable or disable the "raw_" directive.  A "warning" system message
+(including the directive text) is inserted instead.  (See also
+file_insertion_enabled_ for another security-relevant setting.)
+
+默认: enabled (1).  选项: ``--raw-enabled, --no-raw``.
+
+rfc_references
+~~~~~~~~~~~~~~
+
+Recognize and link to standalone RFC references (like "RFC 822").
+
+默认: 禁用 (None); enabled (1) in PEP Reader.
+选项: ``--rfc-references``.
+
+rfc_base_url
+~~~~~~~~~~~~
+
+Base URL for RFC references.
+
+默认: "http://www.faqs.org/rfcs/".  选项: ``--rfc-base-url``.
+
+smart_quotes
+~~~~~~~~~~~~
+
+Change straight quotation marks to typographic form. `Quote characters`_
+are selected according to the language of the current block element (see
+language_code_). Also changes consequtive runs of hyphen-minus and full
+stops (``---``, ``--``, ``...``) to em-dash, en-dash and ellipsis Unicode
+characters respectively.
+
+Supported values:
+
+booleans_ (yes/no)
+  Use smart quotes?
+
+alt (or "alternative")
+  Use alternative quote set (if defined for the language).
+
+默认: "no". 选项: ``--smart-quotes``.
+
+New in Docutils 0.10.
+
+.. _quote characters:
+   http://en.wikipedia.org/wiki/Non-English_usage_of_quotation_marks
+
+.. _cfg-syntax-highlight:
+
+syntax_highlight
+~~~~~~~~~~~~~~~~
+
+Token type names used by Pygments_ when parsing contents of the code_
+directive and role.
+
+Supported values:
+
+long
+  Use hierarchy of long token type names.
+short
+  Use short token type names. (For use with
+  `Pygments-generated stylesheets`_.)
+none
+  No code parsing. Use this to avoid the "Pygments not
+  found" warning when Pygments is not installed.
+
+默认: "long".  选项: ``--syntax-highlight``.
+
+New in Docutils 0.9.
+
+.. _Pygments: http://pygments.org/
+.. _code: ../ref/rst/directives.html#code
+.. _Pygments-generated stylesheets:
+   http://pygments.org/docs/cmdline/#generating-styles
+
+.. _cfg-tab-width:
+
+tab_width
+~~~~~~~~~
+
+Number of spaces for hard tab expansion.
+
+默认: 8.  选项: ``--tab-width``.
+
+trim_footnote_reference_space
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Remove spaces before footnote references.
+
+默认: don't (None); may be overriden by a writer-specific
+footnote_references__ 默认 though.
+
+选项: ``--trim-footnote-reference-space, --leave-footnote-reference-space``.
+
+__ `footnote_references [latex2e writer]`_
+
+
+[readers]
+=========
+
+
+[standalone reader]
+-------------------
+
+docinfo_xform
+~~~~~~~~~~~~~
+
+Enable or disable the bibliographic field list transform
+(docutils.transforms.frontmatter.DocInfo).
+
+默认: enabled (1).  选项: ``--no-doc-info``.
+
+doctitle_xform
+~~~~~~~~~~~~~~
+
+Enable or disable the promotion of a lone top-level section title
+to document title (and subsequent section title to document
+subtitle promotion; docutils.transforms.frontmatter.DocTitle).
+
+默认: enabled (1).  选项: ``--no-doc-title``.
+
+sectsubtitle_xform
+~~~~~~~~~~~~~~~~~~
+
+Enable or disable the promotion of the title of a lone subsection
+to a subtitle (docutils.transforms.frontmatter.SectSubTitle).
+
+默认: 禁用 (0).  选项: ``--section-subtitles,
+--no-section-subtitles``.
+
+
+[pep reader]
+------------
+
+The `pep_references`_ and `rfc_references`_ settings
+(`[restructuredtext parser]`_) are set on by 默认.
+
+
+[python reader]
+---------------
+
+Not implemented.
+
+
+[writers]
+=========
+
+[docutils_xml writer]
+---------------------
+
+.. Caution::
+
+   * In Python versions older than 2.7.3 and 3.2.3, the newlines_ and
+     indents_ 选项 may adversely affect whitespace; use them only for
+     reading convenience (see http://bugs.python.org/issue4147).
+
+   * The XML declaration carries text encoding information, without which
+     standard tools may be unable to read the generated XML.
+
+doctype_declaration
+~~~~~~~~~~~~~~~~~~~
+
+Generate XML with a DOCTYPE declaration.
+
+默认: do (1).  选项: ``--no-doctype``.
+
+indents
+~~~~~~~
+
+Generate XML with indents and newlines.
+
+默认: 不输出 (None)  选项: ``--indents``.
+
+newlines
+~~~~~~~~
+
+Generate XML with newlines before and after tags.
+
+默认: 不输出 (None)  选项: ``--newlines``.
+
+.. _xml_declaration [docutils_xml writer]:
+
+xml_declaration
+~~~~~~~~~~~~~~~
+
+Generate XML with an XML declaration.  Also defined for the
+`HTML Writer`__.
+
+默认: do (1).  选项: ``--no-xml-declaration``.
+
+__ `xml_declaration [html4css1 writer]`_
+
+
+[html4css1 writer]
+------------------
+
+.. _attribution [html4css1 writer]:
+
+attribution
+~~~~~~~~~~~
+
+Format for block quote attributions: one of "dash" (em-dash
+prefix), "parentheses"/"parens", or "none".  Also defined for the
+`LaTeX Writer <attribution [latex2e writer]_>`__.
+
+默认: "dash".  选项: ``--attribution``.
+
+cloak_email_addresses
+~~~~~~~~~~~~~~~~~~~~~
+
+Scramble email addresses to confuse harvesters.  In the reference
+URI, the "@" will be replaced by %-escapes (as of RFC 1738).  In
+the visible text (link text) of an email reference, the "@" and
+all periods (".") will be surrounded by ``<span>`` tags.
+Furthermore, HTML entities are used to encode these characters in
+order to further complicate decoding the email address.  For
+example, "abc@example.org" will be output as::
+
+    <a class="reference" href="mailto:abc&#37;&#52;&#48;example&#46;org">
+    abc<span>&#64;</span>example<span>&#46;</span>org</a>
+
+.. Note:: While cloaking email addresses will have little to no
+   impact on the rendering and usability of email links in most
+   browsers, some browsers (e.g. the ``links`` browser) may decode
+   cloaked email addresses incorrectly.
+
+默认: don't cloak (None).  选项: ``--cloak-email-addresses``.
+
+compact_lists
+~~~~~~~~~~~~~
+
+Remove extra vertical whitespace between items of bullet lists and
+enumerated lists, when list items are all "simple" (i.e., items
+each contain one paragraph and/or one "simple" sublist only).  The
+behaviour can be specified directly via "class" attributes (values
+"compact" and "open") in the document.
+
+默认: enabled (1).
+选项: ``--compact-lists, --no-compact-lists``.
+
+compact_field_lists
+~~~~~~~~~~~~~~~~~~~
+
+Remove extra vertical whitespace between items of field lists that
+are "simple" (i.e., all field bodies each contain at most one
+paragraph).  The behaviour can be specified directly via "class"
+attributes (values "compact" and "open") in the document.
+
+默认: enabled (1).
+选项: ``--compact-field-lists, --no-compact-field-lists``.
+
+.. _embed_stylesheet [html4css1 writer]:
+
+embed_stylesheet
+~~~~~~~~~~~~~~~~
+
+Embed the stylesheet in the output HTML file.  The stylesheet file
+must specified by the stylesheet_path__ setting and must be
+accessible during processing.
+Also defined for the `LaTeX Writer <embed_stylesheet [latex2e writer]_>`__.
+
+默认: enabled.  选项: ``--embed-stylesheet,
+--link-stylesheet``.
+
+__ `stylesheet_path [html4css1 writer]`_
+
+field_name_limit
+~~~~~~~~~~~~~~~~
+
+The maximum width (in characters) for one-column field names. Longer
+field names will span an entire row of the table used to render the field
+list.  0 indicates "no limit".  See also 选项_limit_.
+
+默认: 14 (i.e. 14 characters).  选项: ``--field-name-limit``.
+
+.. _footnote_references [html4css1 writer]:
+
+footnote_references
+~~~~~~~~~~~~~~~~~~~
+
+Format for footnote references, one of "superscript" or "brackets".
+Also defined for the `LaTeX Writer <footnote_references [latex2e writer]_>`__.
+
+Overrides [#override]_ trim_footnote_reference_space_, if
+applicable. [#footnote_space]_
+
+默认: "brackets".  选项: ``--footnote-references``.
+
+initial_header_level
+~~~~~~~~~~~~~~~~~~~~
+
+The initial level for header elements.  This does not affect the
+document title & subtitle; see doctitle_xform_.
+
+默认: 1 (for "<h1>").  选项: ``--initial-header-level``.
+
+.. _cfg-math-output:
+
+math_output
+~~~~~~~~~~~
+
+The format of mathematical content (`math directive`_ and role) in
+the output document. Supported values are (case insensitive):
+
+:HTML:
+  Format math in standard HTML enhanced by CSS rules.
+  Requires the ``math.css`` stylesheet (in the system
+  `stylesheet directory <stylesheet_dirs [html4css1 writer]_>`_
+
+  A `stylesheet_path <stylesheet_path [html4css1 writer]_>`_
+  can be appended after whitespace, the specified
+  stylesheet(s) will only be referenced or embedded, if required
+  (i.e. if there is mathematical content in the document).
+
+:MathJax:
+  Format math for display with MathJax_, a JavaScript-based math
+  rendering engine that uses HTML/CSS, JavaScript, and unicode
+  fonts for high-quality typesetting that is scalable and prints
+  at full resolution.
+
+  Pro:
+    Works 'out of the box' across multiple browsers and platforms.
+
+    Supports a large subset of LaTeX math commands and constructs
+    (see http://www.mathjax.org/docs/1.1/tex.html).
+
+  Con:
+    Requires an Internet connection (or a local MathJax
+    installation and configuration).
+
+    Downloads JavaScript code from a third-party site.
+
+  A custom URI can be appended after whitespace,
+  for example a local installation ::
+
+    math-output: MathJax file:/usr/share/javascript/mathjax/MathJax.js
+
+  or a URI to `access the MathJax CDN using a https secure
+  connection`__.
+
+  __ http://www.mathjax.org/resources/faqs/#problem-https
+
+:MathML:
+  Embed math content as presentational MathML_.
+
+  Pro:
+    The W3C recommendation for math on the web.
+
+    Self-contained documents (no JavaScript, no external downloads).
+
+  Con:
+    Docutil's latex2mathml converter supports only a small
+    subset of LaTeX syntax.
+
+    With the "html4css1" writer, the resulting HTML document does
+    not validate, as there is no DTD for MathML + XHTML
+    Transitional. However, MathML-enabled browsers will render it
+    fine.
+
+:LaTeX:
+  Include literal LaTeX code.
+
+  The failsave fallback.
+
+默认: "HTML math.css".  选项: ``--math-output``.
+
+New in Docutils 0.8.
+
+.. _math directive: ../ref/rst/directives.html#math
+.. _MathJax: http://www.mathjax.org/
+.. _MathPlayer: http://www.dessci.com/en/products/mathplayer/
+.. _MathML: http://www.w3.org/TR/MathML/
+
+选项_limit
+~~~~~~~~~~~~
+
+The maximum width (in characters) for 选项 in 选项 lists.
+Longer 选项 will span an entire row of the table used to render
+the 选项 list.  0 indicates "no limit".  See also
+field_name_limit_.
+
+默认: 14 (i.e. 14 characters).  选项: ``--选项-limit``.
+
+.. _stylesheet [html4css1 writer]:
+
+stylesheet
+~~~~~~~~~~
+
+A comma-separated list of CSS stylesheet URLs, used verbatim.
+Also defined for the `LaTeX Writer <stylesheet [latex2e writer]_>`__.
+
+Overrides also stylesheet-path__. [#override]_
+
+默认: None.  选项: ``--stylesheet``.
+
+__ `stylesheet_path [html4css1 writer]`_
+
+.. _stylesheet_dirs [html4css1 writer]:
+
+stylesheet_dirs
+~~~~~~~~~~~~~~~
+
+A comma-separated list of directories where stylesheets can be found.
+Used by the stylesheet_path__ setting when expanding relative path arguments.
+
+Note: This setting defines a "search path" (similar to the PATH variable for
+executables). However, the term "path" is already used in the
+stylesheet_path__ setting with the meaning of a file location.
+
+__
+__ `stylesheet_path [html4css1 writer]`_
+
+默认: the working directory of the process at launch and the directory
+with 默认 stylesheet files (writer and installation specific).
+Use the ``--help`` 选项 to get the exact value.
+选项: ``--stylesheet-directories``.
+
+.. _stylesheet_path [html4css1 writer]:
+
+stylesheet_path
+~~~~~~~~~~~~~~~
+
+A comma-separated list of paths to CSS stylesheets. Relative paths are
+expanded if a matching file is found in the stylesheet_dirs__.
+If embed_stylesheet__ is False, paths are rewritten relative to the
+output HTML file. Also defined for the `LaTeX Writer`__.
+
+Also overrides "stylesheet". [#override]_
+Pass an empty string (to either "stylesheet" or "stylesheet_path") to
+deactivate stylesheet inclusion.
+
+默认: "html4css1.css".
+选项: ``--stylesheet-path``.
+
+__ `embed_stylesheet [html4css1 writer]`_
+__ `stylesheet_path [latex2e writer]`_
+__ `stylesheet_dirs [html4css1 writer]`_
+
+.. _table_style [html4css1 writer]:
+
+table_style
+~~~~~~~~~~~
+
+Class value(s) added to tables to allow styling with CSS.
+The 默认 sylesheet defines:
+
+borderless
+  No borders around the table.
+
+booktabs
+  Lines above and below the table and a thin line after the head.
+
+默认: "".  选项: ``--table-style``.
+
+.. _template [html4css1 writer]:
+
+template
+~~~~~~~~
+
+Path to template file, which must be encoded in UTF-8 [#pwd]_.
+Also defined for the `LaTeX Writer`__.
+
+默认: "template.txt" in the docutils/writers/html4css1/
+directory (installed automatically; for the exact machine-specific
+path, use the ``--help`` 选项).  选项: ``--template``.
+
+__ `template [latex2e writer]`_
+
+.. _xml_declaration [html4css1 writer]:
+
+xml_declaration
+~~~~~~~~~~~~~~~
+
+Generate XML with an XML declaration.  Also defined for the
+`Docutils XML Writer`__.
+
+.. Caution:: The XML declaration carries text encoding
+   information, without which standard tools may be unable to read
+   the generated XML.
+
+默认: do (1).  选项: ``--no-xml-declaration``.
+
+__ `xml_declaration [docutils_xml writer]`_
+
+
+[pep_html writer]
+~~~~~~~~~~~~~~~~~
+
+The PEP/HTML Writer derives from the standard HTML Writer, and shares
+all settings defined in the `[html4css1 writer]`_ section.  The
+"[html4css1 writer]" section of configuration files is processed
+before the "[pep_html writer]" section.
+
+The PEP/HTML Writer's 默认 for the following settings differ from
+those of the standard HTML Writer:
+
+`stylesheet_path <stylesheet_path [html4css1 writer]_>`_:
+  默认: "pep.css"
+
+`template <template [html4css1 writer]_>`_:
+  默认: ``docutils/writers/pep_html/template.txt`` in the installation
+  directory.  For the exact machine-specific path, use the ``--help``
+  选项.
+
+no_random
+"""""""""
+Do not use a random banner image.  Mainly used to get predictable
+results when testing.
+
+默认: random enabled (None).  选项: ``--no-random`` (hidden).
+
+pep_home
+""""""""
+
+Home URL prefix for PEPs.
+
+默认: current directory (".").  选项: ``--pep-home``.
+
+python_home
+"""""""""""
+Python's home URL.
+
+默认: parent directory ("..").  选项: ``--python-home``.
+
+
+[s5_html writer]
+~~~~~~~~~~~~~~~~
+
+The S5/HTML Writer derives from the standard HTML Writer, and shares
+all settings defined in the `[html4css1 writer]`_ section.  The
+"[html4css1 writer]" section of configuration files is processed
+before the "[s5_html writer]" section.
+
+The S5/HTML Writer's 默认 for the following settings differ
+from those of the standard HTML Writer:
+
+compact_lists_:
+    默认: disable compact lists.
+
+template_:
+  默认: ``docutils/writers/s5_html/template.txt`` in the installation
+  directory.  For the exact machine-specific path, use the ``--help``
+  选项.
+
+
+hidden_controls
+"""""""""""""""
+
+Auto-hide the presentation controls in slideshow mode, or or keep
+them visible at all times.
+
+默认: auto-hide (1).  选项: ``--hidden-controls``,
+``--visible-controls``.
+
+current_slide
+"""""""""""""
+
+Enable or disable the current slide indicator ("1/15").
+
+默认: 禁用 (None).  选项: ``--current-slide``,
+``--no-current-slide``.
+
+overwrite_theme_files
+"""""""""""""""""""""
+
+Allow or prevent the overwriting of existing theme files in the
+``ui/<theme>`` directory.  This has no effect if "theme_url_" is
+used.
+
+默认: keep existing theme files (None).  选项:
+``--keep-theme-files``, ``--overwrite-theme-files``.
+
+theme
+"""""
+
+Name of an installed S5 theme, to be copied into a ``ui/<theme>``
+subdirectory, beside the destination file (output HTML).  Note
+that existing theme files will not be overwritten; the existing
+theme directory must be deleted manually.
+Also overrides the "theme_url_" setting. [#override]_
+
+默认: "默认".  选项: ``--theme``.
+
+theme_url
+"""""""""
+The URL of an S5 theme directory.  The destination file (output
+HTML) will link to this theme; nothing will be copied.  Also overrides
+the "theme_" setting. [#override]_
+
+默认: None.  选项: ``--theme-url``.
+
+view_mode
+"""""""""
+
+The initial view mode, either "slideshow" or "outline".
+
+默认: "slidewhow".  选项: ``--view-mode``.
+
+
+[latex2e writer]
+----------------
+
+use_latex_toc
+~~~~~~~~~~~~~
+
+To get pagenumbers in the table of contents the table of contents
+must be generated by LaTeX. Usually latex must be run twice to get
+numbers correct.
+
+默认: on.  选项: ``--use-latex-toc, --use-docutils-toc``.
+
+use_latex_docinfo
+~~~~~~~~~~~~~~~~~
+
+Attach author and date to the document title
+instead of the document info table.
+
+默认: off.  选项: ``--use-latex-docinfo, --use-docutils-docinfo``.
+
+docutils_footnotes
+~~~~~~~~~~~~~~~~~~
+Use the Docutils-specific macros ``\DUfootnote`` and
+``\DUfootnotetext`` for footnotes.
+
+默认: on.  选项: ``--docutils-footnotes``.
+
+figure_footnotes
+~~~~~~~~~~~~~~~~
+
+Typeset footnote text in a figure float. This may lead to footnotes,
+citations, and figures being mixed at page foot.
+
+*Deprecated:* This setting will be removed in a future Docutils
+version.
+
+默认: off.  选项: ``--figure-footnotes``.
+
+use_latex_citations
+~~~~~~~~~~~~~~~~~~~
+
+Use \cite for citations instead of a simulation with figure-floats.
+
+默认: off.  选项: ``--use-latex-citations, --figure-citations``.
+
+use_latex_abstract
+~~~~~~~~~~~~~~~~~~
+
+Use LaTeX abstract environment for the document's abstract.
+
+默认: off.  选项: ``--use-latex-abstract, --topic-abstract``.
+
+hyperlink_color
+~~~~~~~~~~~~~~~
+
+Color of any hyperlinks embedded in text.
+
+* "0" or "false" disable coloring of links. (Links will be marked
+  by red boxes that are not printed),
+* "black" results in “invisible“ links,
+
+Set hyperref_选项_ to "draft" to completely disable hyperlinking.
+
+默认: "blue".  选项: ``--hyperlink-color``.
+
+hyperref_选项
+~~~~~~~~~~~~~~~~
+
+选项 for the `hyperref TeX package`_. If hyperlink_color_ is
+not "false", the expansion of ::
+
+  'colorlinks=true,linkcolor=%s,urlcolor=%s' % (
+     hyperlink_color, self.hyperlink_color
+
+is prepended.
+
+默认: "".   选项: ``--hyperref-选项``.
+
+.. _hyperref TeX package: http://tug.org/applications/hyperref/
+
+documentclass
+~~~~~~~~~~~~~
+
+Specify latex documentclass.
+
+默认: "article".  选项: ``--documentclass``.
+
+document选项
+~~~~~~~~~~~~~~~
+
+Specify document 选项.  Multiple 选项 can be given, separated by
+commas.
+
+默认: "a4paper".  选项: ``--document选项``.
+
+font_encoding
+~~~~~~~~~~~~~
+
+Specify LaTeX font encoding. Multiple 选项 can be given, separated by
+commas. The last value becomes the document 默认.
+Possible values are "", "T1", "OT1", "LGR,T1" or any other combination of
+`LaTeX font encodings`_.
+
+默认: "T1".  选项: ``--font-encoding``.
+
+.. _LaTeX font encodings:
+   http://mirror.ctan.org/macros/latex/doc/encguide.pdf
+
+.. _embed_stylesheet [latex2e writer]:
+
+embed_stylesheet
+~~~~~~~~~~~~~~~~
+
+Embed the stylesheet(s) in the header of the output file.  The
+stylesheets must be accessible during processing.  Currently, this
+fails if the file is not available via the given path (i.e. the
+file is *not* searched in the `TeX input path`_).
+Also defined for the `HTML Writer`__ (with 默认 *on*).
+
+默认: off.  选项: ``--embed-stylesheet, --link-stylesheet``.
+
+__ `embed_stylesheet [html4css1 writer]`_
+
+.. _stylesheet [latex2e writer]:
+
+stylesheet
+~~~~~~~~~~
+
+A comma-separated list_ of style files.
+Also defined for the `HTML Writer`__.
+
+Overrides also stylesheet_path__. [#override]_
+
+If `embed_stylesheet`__ is False (默认), the stylesheet files are
+referenced with ``\usepackage`` (extension ``.sty`` or no extension) or
+``\input`` (any other extension).
+
+LaTeX will search the specified files in the `TeX input path`_.
+
+默认: no stylesheet ("").  选项: ``--stylesheet``.
+
+__ `stylesheet_path [latex2e writer]`_
+__ `embed_stylesheet [latex2e writer]`_
+__ `stylesheet [html4css1 writer]`_
+.. _TeX input path:
+   http://www.tex.ac.uk/cgi-bin/texfaq2html?label=what-TDS
+
+
+.. _stylesheet_dirs [latex2e writer]:
+
+stylesheet_dirs
+~~~~~~~~~~~~~~~
+
+A comma-separated list of directories where stylesheets can be found.
+Used by the stylesheet_path__ setting.
+
+Note: This setting defines a "search path" (similar to the PATH variable for
+executables). However, the term "path" is already used in the
+stylesheet_path__ setting with the meaning of a file location.
+
+__
+__ `stylesheet_path [latex2e writer]`_
+
+默认: the working directory of the process at launch and the directory
+with 默认 stylesheet files (writer and installation specific).
+Use the ``--help`` 选项 to get the exact value.
+选项: ``--stylesheet-directories``.
+
+.. _stylesheet_path [latex2e writer]:
+
+stylesheet_path
+~~~~~~~~~~~~~~~
+
+A comma-separated list of style files. Relative paths are expanded if a
+matching file is found in the stylesheet_dirs__.
+If embed_stylesheet__ is False, paths are rewritten relative to the
+output file path. Run ``latex`` from the directory containing
+the output file.
+
+The stylesheet__  选项 is preferred for files in the `TeX input path`_.
+
+Also defined for the
+`HTML Writer <stylesheet_path [html4css1 writer]_>`__.
+
+Also overrides stylesheet__. [#override]_
+
+默认: no stylesheet ("").  选项: ``--stylesheet-path``.
+
+__ `stylesheet_dirs [latex2e writer]`_
+__ `embed_stylesheet [latex2e writer]`_
+__
+__ `stylesheet [latex2e writer]`_
+
+
+latex_preamble
+~~~~~~~~~~~~~~
+
+LaTeX code that will be inserted in the document preamble.
+Can be used to load packages with 选项 or (re-) define LaTeX
+macros without writing a custom style file (new in Docutils 0.7).
+
+默认: Load the "PDF standard fonts" (Times, Helvetica,
+Courier)::
+
+  \usepackage{mathptmx} % Times
+  \usepackage[scaled=.90]{helvet}
+  \usepackage{courier}
+
+选项: ``--latex-preamble``.
+
+
+.. _template [latex2e writer]:
+
+template
+~~~~~~~~
+
+Path to template file, which must be encoded in UTF-8 [#pwd]_.
+Also defined for the `HTML Writer`__.
+
+默认: "默认.tex" in the docutils/writers/latex2e/
+directory (installed automatically; for the exact machine-specific
+path, use the ``--help`` 选项).  选项: ``--template``.
+
+__ `template [html4css1 writer]`_
+
+.. _footnote_references [latex2e writer]:
+
+footnote_references
+~~~~~~~~~~~~~~~~~~~
+
+Format for footnote references: one of "superscript" or
+"brackets".  Also defined for the `HTML Writer`__.
+
+Overrides [#override]_ trim_footnote_reference_space_, if
+applicable [#footnote_space]_.
+
+默认: "superscript".  选项: ``--footnote-references``.
+
+__ `footnote_references [html4css1 writer]`_
+
+.. _attribution [latex2e writer]:
+
+attribution
+~~~~~~~~~~~
+
+See `attribution [html4css1 writer]`_.
+
+compound_enumerators
+~~~~~~~~~~~~~~~~~~~~
+
+Enable or disable compound enumerators for nested enumerated lists
+(e.g. "1.2.a.ii").
+
+默认: 禁用 (None).
+选项: ``--compound-enumerators``, ``--no-compound-enumerators``.
+
+literal_block_env
+~~~~~~~~~~~~~~~~~
+
+When possibile\ [#]_, use the specified environment for literal-blocks.
+
+默认: "" (quoting of whitespace and special chars).
+选项: ``--literal-block-env``.
+
+.. [#] A literal-block element, when processed by a Docutils writer might
+   have it's origin in literal block following "::" or a
+   ``.. parsed-literal::`` directive.
+
+   A LaTeX verbatim environment is only usable if there is no other
+   markup contained in the literal-block.
+
+
+section_prefix_for_enumerators
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Enable or disable section ("." subsection ...) prefixes for
+compound enumerators.  This has no effect unless
+`compound_enumerators`_ are enabled.
+
+默认: 禁用 (None).
+选项: ``--section-prefix-for-enumerators``,
+``--no-section-prefix-for-enumerators``.
+
+section_enumerator_separator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The separator between section number prefix and enumerator for
+compound enumerated lists (see `compound_enumerators`_).
+
+Generally it isn't recommended to use both sub-sections and nested
+enumerated lists with compound enumerators.  This setting avoids
+ambiguity in the situation where a section "1" has a list item
+enumerated "1.1", and subsection "1.1" has list item "1".  With a
+separator of ".", these both would translate into a final compound
+enumerator of "1.1.1".  With a separator of "-", we get the
+unambiguous "1-1.1" and "1.1-1".
+
+默认: "-".  选项: ``--section-enumerator-separator``.
+
+.. _table_style [latex2e writer]:
+
+table_style
+~~~~~~~~~~~
+
+Specify the drawing of separation lines.
+Supported values:
+
+standard
+  lines around and between cells.
+booktabs
+  a line above and below the table and one after the head.
+borderless
+  no lines.
+
+默认: "standard".  选项: ``--table-style``.
+
+[xetex writer]
+~~~~~~~~~~~~~~
+
+The xetex writer derives from the latex2e writer, and shares
+all settings defined in the `[latex2e writer]`_ section.  The
+"[latex2e writer]" section of configuration files is processed
+before the "[xetex writer]" section.
+
+The following settings differ from those of the latex2e writer:
+
+font_encoding_
+    禁用  (XeTeX uses Unicode-encoded fonts).
+
+latex_preamble_
+    默认: Font setup for `Linux Libertine`_,::
+
+      % Linux Libertine (free, wide coverage, not only for Linux)
+      \setmainfont{Linux Libertine O}
+      \setsansfont{Linux Biolinum O}
+      \setmonofont[HyphenChar=None]{DejaVu Sans Mono}
+
+  The 选项al argument ``HyphenChar=None`` to the monospace font
+  prevents word hyphenation in literal text.
+
+template__
+    默认: "xelatex.tex"
+
+.. _Linux Libertine: http://www.linuxlibertine.org/
+__ `template [latex2e writer]`_
+
+
+[odf_odt writer]
+----------------
+
+The following command line 选项 are specific to ``odtwriter``:
+
+stylesheet
+~~~~~~~~~~
+
+Specify a stylesheet URL, used verbatim.
+
+默认: writers/odf_odt/styles.odt in the installation directory.
+
+odf-config-file
+~~~~~~~~~~~~~~~
+
+Specify a configuration/mapping file relative to the current working
+directory for additional ODF 选项. In particular, this file may
+contain a section named "Formats" that maps 默认 style names to names
+to be used in the resulting output file allowing for adhering to external
+standards. For more info and the format of the configuration/mapping
+file, see the `Odt Writer for Docutils`_ document.
+
+cloak-email-addresses
+~~~~~~~~~~~~~~~~~~~~~
+
+Obfuscate email addresses to confuse harvesters while still
+keeping email links usable with standards-compliant browsers.
+
+no-cloak-email-addresses
+~~~~~~~~~~~~~~~~~~~~~~~~
+Do not obfuscate email addresses.
+
+table-border-thickness
+~~~~~~~~~~~~~~~~~~~~~~
+
+Specify the thickness of table borders in thousands of a cm.
+默认 is 35.
+
+add-syntax-highlighting
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Add syntax highlighting in literal code blocks.
+
+no-syntax-highlighting
+~~~~~~~~~~~~~~~~~~~~~~
+
+Do not add syntax highlighting in literal code blocks.
+(默认)
+
+create-sections
+~~~~~~~~~~~~~~~
+
+Create sections for headers.  (默认)
+
+no-sections
+~~~~~~~~~~~
+
+Do not create sections for headers.
+
+create-links
+~~~~~~~~~~~~
+Create links.
+
+no-links
+~~~~~~~~
+
+Do not create links.  (默认)
+
+endnotes-end-doc
+~~~~~~~~~~~~~~~~
+
+Generate endnotes at end of document, not footnotes at bottom of page.
+
+no-endnotes-end-doc
+~~~~~~~~~~~~~~~~~~~
+
+Generate footnotes at bottom of page, not endnotes at end of
+document. (默认)
+
+generate-list-toc
+~~~~~~~~~~~~~~~~~
+
+Generate a bullet list table of contents, not an
+ODF/``oowriter`` table of contents.
+
+generate-oowriter-toc
+~~~~~~~~~~~~~~~~~~~~~
+
+Generate an ODF/``oowriter`` table of contents, not a bullet
+list.  (默认) **Note:** ``odtwriter`` is not able to
+determine page numbers, so you will need to open the generated
+document in ``oowriter``, then right-click on the table of
+contents and select "Update" to insert page numbers.
+
+custom-odt-header
+~~~~~~~~~~~~~~~~~
+
+Specify the contents of a custom header line.  For details about
+custom headers and about special field character sequences, see
+section "Custom header/footers: inserting page numbers, date,
+time, etc" in the `Odt Writer for Docutils`_ document for
+details.
+
+custom-odt-footer
+~~~~~~~~~~~~~~~~~
+
+Specify the contents of a custom footer line.  For details about
+custom footers and about special field character sequences, see
+section "Custom header/footers: inserting page numbers, date,
+time, etc" in the `Odt Writer for Docutils`_ document for
+details.
+
+.. _Odt Writer for Docutils: odt.html
+
+
+[pseudoxml writer]
+------------------
+
+This writer does not define specific settings.
+
+
+[applications]
+==============
+
+[buildhtml application]
+-----------------------
+
+ignore
+~~~~~~
+
+List_ of wildcard (shell globing) patterns, specifying files to silently
+ignore.  To specify multiple patterns, use colon-separated patterns (in
+configuration files or on the command line); on the command line, the
+选项 may also be used more than once.
+
+默认: none.  选项: ``--ignore``.
+
+prune
+~~~~~
+
+List_ of directories not to process.  To specify multiple
+directories, use colon-separated paths (in configuration files or
+on the command line); on the command line, the 选项 may also be
+used more than once.
+
+默认: ['.hg', '.bzr', '.git', '.svn', 'CVS'].  选项:
+``--prune``.
+
+recurse
+~~~~~~~
+
+Recursively scan subdirectories, or ignore subdirectories.
+
+默认: recurse (1).  选项: ``--recurse, --local``.
+
+silent
+~~~~~~
+
+Work silently (no progress messages).  Independent of
+"report_level".
+
+默认: show progress (None).  选项: ``--silent``.
+
+
+[docfactory application]
+------------------------
+
+(To be completed.)
+
+
+Other Settings
+==============
+
+Command-Line Only
+-----------------
+
+These settings are only effective as command-line 选项; setting
+them in configuration files has no effect.
+
+config
+~~~~~~
+
+Path to a configuration file to read (if it exists) [#pwd]_.
+Settings may override 默认s and earlier settings.  The config
+file is processed immediately.  Multiple ``--config`` 选项 may
+be specified; each will be processed in turn.
+
+Filesystem path settings contained within the config file will be
+interpreted relative to the config file's location (*not* relative
+to the current working directory).
+
+默认: None.  选项: ``--config``.
+
+
+Internal Settings
+-----------------
+
+These settings are for internal use only; setting them in
+configuration files has no effect, and there are no corresponding
+command-line 选项.
+
+_config_files
+~~~~~~~~~~~~~
+
+List of paths of applied configuration files.
+
+默认: None.  No command-line 选项.
+
+_directories
+~~~~~~~~~~~~
+
+(``buildhtml.py`` front end.)  List of paths to source
+directories, set from positional arguments.
+
+默认: current working directory (None).  No command-line
+选项.
+
+_disable_config
+~~~~~~~~~~~~~~~
+
+Prevent standard configuration files from being read.  For
+programmatic use only.
+
+默认: config files enabled (None).  No command-line 选项.
+
+_destination
+~~~~~~~~~~~~
+
+Path to output destination, set from positional arguments.
+
+默认: stdout (None).  No command-line 选项.
+
+_source
+~~~~~~~
+
+Path to input source, set from positional arguments.
+
+默认: stdin (None).  No command-line 选项.
+
+
+.. _language tag: http://www.w3.org/International/articles/language-tags/
+.. _BCP 47: http://www.rfc-editor.org/rfc/bcp/bcp47.txt
+.. _ISO 639: http://www.loc.gov/standards/iso639-2/php/English_list.php
+.. _ISO 3166: http://www.iso.ch/iso/en/prods-services/iso3166ma/
+   02iso-3166-code-lists/index.html
+
+.. [#pwd] Path relative to the working directory of the process at
+   launch.
+
+.. [#override] The overridden setting will automatically be set to
+   ``None`` for command-line 选项 and config file settings.  Client
+   programs which specify 默认s that override other settings must
+   do the overriding explicitly, by assigning ``None`` to the other
+   settings.
+
+.. [#dependencies] Images are only added to the dependency list if the
+   reStructuredText parser extracted image dimensions from the file.
+
+.. [#footnote_space] The footnote space is trimmed if the reference
+   style is "superscript", and it is left if the reference style is
+   "brackets".
+
+   The overriding only happens if the parser supports the
+   trim_footnote_reference_space 选项.
+
+
+------------------------------
+Old-Format Configuration Files
+------------------------------
+
+Formerly, Docutils configuration files contained a single "[选项]"
+section only.  This was found to be inflexible, and in August 2003
+Docutils adopted the current component-based configuration file
+sections as described above.  Docutils will still recognize the old
+"[选项]" section, but complains with a deprecation warning.
+
+To convert existing config files, the easiest way is to change the
+section title: change "[选项]" to "[general]".  Most settings
+haven't changed.  The only ones to watch out for are these:
+
+=====================  =====================================
+Old-Format Setting     New Section & Setting
+=====================  =====================================
+pep_stylesheet         [pep_html writer] stylesheet
+pep_stylesheet_path    [pep_html writer] stylesheet_path
+pep_template           [pep_html writer] template
+=====================  =====================================

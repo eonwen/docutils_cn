@@ -1,0 +1,143 @@
+.. _sdf:
+
+============================================
+ reStructuredText标准定义文件
+============================================
+:Author: eonwen
+:Contact: eonwen@hotmail.com
+
+本文档描述了可以被包含到reStructuredText文档中的标准定义文件的集合，如替代定义和解释文本角色等。 :ref:`"include"指令 <dt-include>` 
+对于这些标准定义文件使用一个特殊的语法，尖括号包围文件名::
+
+    .. include:: <filename.txt>
+
+独立的数据文件及Docutils源码被存储在 ``docutils/parsers/rst/include`` 文件夹中的"docutils"包中。
+
+.. contents::
+
+.. _sdf-substitution-definitions:
+
+替代定义
+========================
+
+许多标准定义文件包含 :ref:`替代定义 <rst-Substitution-Definitions>` 的集合，可以通过 :ref:`替代引用 <rst-substitution-references>` 在文档中使用。例如，版权符号作为"copy"定义在 ``isonum.txt`` 中::
+
+    .. include:: <isonum.txt>
+
+    Copyright |copy| 2003 by John Q. Public, all rights reserved.
+
+独立的替代定义也可以从替代文件中拷贝到文档中来。这有两个好处: 破除依赖性，并保证未使用定义的处理。但多个替代定义会使文档变得凌乱。
+
+替代引用需要使用空格或标点与包围的文字隔开。想不适用空格就使用替代，你可以使用看不见的空白转义序列，反斜杠空格::
+
+    .. include:: isonum.txt
+
+    Copyright |copy| 2003, BogusMegaCorp\ |trade|.
+
+自定义替代定义可以使用 :ref:`"unicode"指令 <dt-unicode>`.
+空格会被忽略并移除，有效的将文字放在一起::
+
+    .. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
+    .. |BogusMegaCorp (TM)| unicode:: BogusMegaCorp U+2122
+       .. with trademark sign
+
+    Copyright |copy| 2003, |BogusMegaCorp (TM)|.
+
+另外，"ltrim"、"rtrim"和"trim"选项可以与"unicode"指令一起使用以自动去除替代引用头尾的空格::
+
+    .. |---| unicode:: U+02014 .. em dash
+       :trim:
+
+.. _sdf-character-entity-sets:
+
+字符实体集合
+---------------------
+
+下列文件包含了对应XML字符实体集合的替代定义，使用以下标准: ISO 8879 和
+ISO 9573-13 (组合)、MathML和XHTML1。它们由 ``tools/dev/unicode2rstsubs.py`` 程序从输入文件 unicode.xml__ 中生成(MathML 2的一部分)。
+
+__ http://www.w3.org/2003/entities/xml/
+
+===================  =================================================
+实体集合文件         描述
+===================  =================================================
+isoamsa.txt_         添加数学符号: 箭头
+isoamsb.txt_         添加数学符号: 二进制操作符
+isoamsc.txt_         添加数学符号: 分隔符
+isoamsn.txt_         添加数学符号: 否定关系
+isoamso.txt_         添加数学符号: Ordinary
+isoamsr.txt_         添加数学符号: 关系
+isobox.txt_          箱线图
+isocyr1.txt_         俄文
+isocyr2.txt_         非俄文
+isodia.txt_          变音符号
+isogrk1.txt_         希腊字母
+isogrk2.txt_         Monotoniko Greek
+isogrk3.txt_         希腊符号
+isogrk4.txt_  [1]_   替代希腊符号
+isolat1.txt_         添加 Latin 1
+isolat2.txt_         添加 Latin 2
+isomfrk.txt_  [1]_   数学哥特字体
+isomopf.txt_  [1]_   数学公开字体(双击)
+isomscr.txt_  [1]_   数学脚本
+isonum.txt_          数字和特殊图形
+isopub.txt_          出版
+isotech.txt_         通用技术
+mmlalias.txt_        MathML aliases for entities from other sets
+mmlextra.txt_ [1]_   MathML的额外添加的名称
+xhtml1-lat1.txt_     XHTML Latin 1
+xhtml1-special.txt_  XHTML 特殊字符
+xhtml1-symbol.txt_   XHTML 数学，希腊和符号字符
+===================  =================================================
+
+.. [1] 对于每个字符实体集合文件都有 ``*-wide.txt`` 变体，包含Unicode
+   基本多语种计划之外的字符或BMP(宽Unicode，到，代码点大于U+FFFF)。
+   大多数预建立Python分发是"narrow"且不支持宽Unicode字符。
+   Python **可以** 使用宽Unicode支持建立，详见Python构建指南。
+
+例如，版权符号被定义为XML字符实体 ``&copy;``。等价的reStructuredText替代引用为(同时定义在 ``isonum.txt`` 和 ``xhtml1-lat1.txt`` 中) ``|copy|`` 。
+
+.. _isoamsa.txt:        include/isoamsa.txt
+.. _isoamsb.txt:        include/isoamsb.txt
+.. _isoamsc.txt:        include/isoamsc.txt
+.. _isoamsn.txt:        include/isoamsn.txt
+.. _isoamso.txt:        include/isoamso.txt
+.. _isoamsr.txt:        include/isoamsr.txt
+.. _isobox.txt:         include/isobox.txt
+.. _isocyr1.txt:        include/isocyr1.txt
+.. _isocyr2.txt:        include/isocyr2.txt
+.. _isodia.txt:         include/isodia.txt
+.. _isogrk1.txt:        include/isogrk1.txt
+.. _isogrk2.txt:        include/isogrk2.txt
+.. _isogrk3.txt:        include/isogrk3.txt
+.. _isogrk4.txt:        include/isogrk4.txt
+.. _isolat1.txt:        include/isolat1.txt
+.. _isolat2.txt:        include/isolat2.txt
+.. _isomfrk.txt:        include/isomfrk.txt
+.. _isomopf.txt:        include/isomopf.txt
+.. _isomscr.txt:        include/isomscr.txt
+.. _isonum.txt:         include/isonum.txt
+.. _isopub.txt:         include/isopub.txt
+.. _isotech.txt:        include/isotech.txt
+.. _mmlalias.txt:       include/mmlalias.txt
+.. _mmlextra.txt:       include/mmlextra.txt
+.. _xhtml1-lat1.txt:    include/xhtml1-lat1.txt
+.. _xhtml1-special.txt: include/xhtml1-special.txt
+.. _xhtml1-symbol.txt:  include/xhtml1-symbol.txt
+
+.. _sdf-s5-html-definitions:
+
+S5/HTML定义
+===================
+
+"s5defs.txt_" 标准定义文件包含需要转换为 :ref:`S5/HTML幻灯片 <sshow>` 文档的解释文本角色(类)和其他定义。  
+
+.. _s5defs.txt: include/s5defs.txt
+
+..
+   Local Variables:
+   mode: indented-text
+   indent-tabs-mode: nil
+   sentence-end-double-space: t
+   fill-column: 70
+   End:

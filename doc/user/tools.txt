@@ -1,0 +1,332 @@
+.. _fet:
+
+==========================
+ Docutils前端工具
+==========================
+
+:Author: eonwen
+:Contact: eonwen@hotmail.com
+
+.. contents::
+.. section-numbering::
+
+.. _fet-introduction:
+
+--------------
+ 介绍
+--------------
+
+一旦解压缩Docutils包，你会发现一个包含若干用于通用Docutils处理的前端工具的 "``tools``"文件夹。相对于单个通用程序，Docutils有许多小前端，每个小前段专门针对一个指定的"Reader" (其知道如何在上下文中解释一个文件)、一个"Parser" (其明白文本的语法)和一个"Writer" (其知道如何生存一个特定数据格式)。  
+
+大部分前端前端具有通用选项和相同的命令行使用模式::
+
+    toolname [options] [<source> [<destination]]
+
+(:ref:`buildhtml.py <fet-buildhtml-py>` 和 :ref:`rstpep2html.py <fet-rstpep2html-py>` 例外) 查看 :ref:`rst2html.py <fet-rst2html-py>` 以获取实例。每个工具都有"``--help``"选项，其会列出支持的 :ref:`命令行选项 <fet-command-line-options>` 和参数。也可以使用 :ref:`配置文件 <fet-configuration-file>` 自定义处理方式。
+
+参数"source"和"destination"是可选的。如果只指定了一个参数(sourece)，标准输出(stdout)会被作为目标(destination)。如果没有指定参数，标准输入(stdin)会用作源(source)。
+
+.. _fet-getting-help:
+
+获取帮助
+============
+
+首先，尝试每个前端的"``--help``"选项。
+
+对于Docutils或reStructuredText有疑问或需要帮助的用户可以发送一封邮件到 :ref:`Docutils用户 <dml-docutils-users>` 邮件列表。
+
+.. _fet-tools:
+
+-----------
+ 工具
+-----------
+
+.. _fet-html-generating-tools:
+
+HTML生成工具
+=====================
+
+.. _fet-buildhtml-py:
+
+buildhtml.py
+-------------
+
+:Readers: Standalone, PEP
+:Parser: reStructuredText
+:Writers: HTML, PEP/HTML
+
+使用 ``buildhtml.py`` 为每个指定文件夹及其子文件夹(使用 ``--local`` 选项忽略子文件夹)中的所有 ``.txt`` 文件(包括PEPs)生成 ``.html`` 
+
+用法::
+
+    buildhtml.py [options] [<directory> ...]
+
+在Docutils包解包后，如下命令会为所有包含的文档生成HTML::
+
+    cd docutils/tools
+    buildhtml.py ..
+
+对于官方版本，该文件夹可能名为"docutils-X.Y"，其中"X.Y"表示版本号。或者::
+
+    cd docutils
+    tools/buildhtml.py --config=tools/docutils.conf
+
+如果没有命名文件夹，当前文件夹(及所有子文件夹)会被默认选择。某些文件会生成系统信息(docs/user/rst/demo.txt 包含故意的错误); 使用 ``--quiet`` 选项来抑制所有的警告。 ``--config`` 选项确保设置正确(当前目录中的 :ref:`配置文件 <fet-configuration-file>` ``docutils.conf`` 会自动被拾起)。命令行选项也可以用来重写配置文件设置或替代它们。
+
+.. _fet-rst2html-py:
+
+rst2html.py
+-----------
+
+:Reader: Standalone
+:Parser: reStructuredText
+:Writer: HTML
+
+``rst2html.py`` 前端独立读取reStructuredText源文件并生成兼容现代浏览器(支持级联样式表)的HTML 4(XHTML 1)。合适的渲染需要样式表，默认已经安装并使用了一个简单但完整的样式表(见下面的 :ref:`样式表 <fet-stylesheets>`)。
+
+例如，需要将一个reStructuredText文件"``test.txt``"处理为HTML::
+
+    rst2html.py test.txt test.html
+
+现在在你喜欢的浏览器中打开"``test.html``"文件，看看结果如何。想添加一个指向源文件、处理的日期和时间及指向Docutils项目的脚标，添加某些选项::
+
+    rst2html.py -stg test.txt test.html
+
+.. _fet-stylesheets:
+
+Stylesheets
+```````````
+
+``rst2html.py`` 会在生成的HTML中插入一个级联样式表(或指向样式表的链接，如果传递了"``--link-stylesheet``"选项)。适当渲染需要一个样式表。默认样式表(安装文件夹中的 ``docutils/writers/html4css1/html4css1.css``)用于基本使用。需要使用其他样式表，你必须使用命令行选项"``--stylesheet``"(对于一个URL)或"``--stylesheet-path``"(对于一个本地文件)或 :ref:`配置文件 <fet-configuration-file>` 设置(如 ``./docutils.conf`` 或 ``~/.docutils``)来指定样式表的位置。想试试样式，请阅读 :ref:`为Docutils编写HTML样式表指南 <hss>`.
+
+
+.. _fet-rstpep2html-py:
+
+rstpep2html.py
+--------------
+
+:Reader: PEP
+:Parser: reStructuredText
+:Writer: PEP/HTML
+
+``rstpep2html.py`` 读取一个新式PEP(使用reStructuredText标记)并生成HTML。它需要一个模板文件和一个样式表。默认情况下，它使用"``pep-html-template``"文件和"``pep.css``"样式表(都在 ``docutils/writers/pep_html/`` 文件夹)，但可以使用命令行选项或配置文件覆盖。
+
+例如，需要将一个PEP转换为HTML::
+
+    cd <path-to-docutils>/docs/peps
+    rstpep2html.py pep-0287.txt pep-0287.html
+
+.. _fet-rst2s5-py:
+
+rst2s5.py
+---------
+
+:Reader: Standalone
+:Parser: reStructuredText
+:Writer: S5/HTML
+
+``rst2s5.py`` 前端工具读取独立的reStructuredText源文件并生成兼容 S5_ (Eric Meyer 制作的"简单基于标准的幻灯片放音系统")的(X)HTML输出。需要一个主题以合适的渲染；Docutils和其他工具自带了好几个。见下面的 :ref:`主题 <fet-themes>`.
+
+例如，将一个reStructuredText文件 "``slides.txt``" 转换为S5/HTML::
+
+    rst2s5.py slides.txt slides.html
+
+现在使用你喜欢的浏览器打开"``slides.html``"文件，切换至全屏模式，享受结果吧。
+
+.. _S5: http://meyerweb.com/eric/tools/s5/
+
+.. _fet-themes:
+
+主题
+``````
+
+每个S5主题由一个包含几个文件的文件夹组成:
+样式表、JavaScript脚本文件和图形。它们会被拷贝到生成的HTML的 ``ui/<theme>`` 文件夹中。使用"``--theme``"选项(针对Docutils自带的主题)或"``--theme-url``"选项(其他主题)来选择主题。例如，"medium-black"主题可以使用如下方式指定::
+
+    rst2s5.py --theme medium-black slides.txt slides.html
+
+该主题会被复制到 ``ui/medium-black`` 文件夹。
+
+Docutils自带了几个主题:
+
+``default``
+    这是S5默认主题的简化版本。
+
+    :Main content: 白底黑字
+    :Text capacity: (文本容量)大概13行
+    :Headers: 深蓝背景上的浅蓝、粗体文本，标题限制为1行
+    :Footers: 深蓝背景上的小的、灰色的粗体文本
+
+``small-white``
+    (白底小字)
+
+    :Main content: 白底黑字
+    :Text capacity: 大概15行
+    :Headers: 白色背景上的黑色粗体字，标题包装
+    :Footers: 白色背景上的深灰加粗小字
+
+``small-black``
+    :Main content: 白底黑字
+    :Text capacity: 大概15行
+    :Headers: 黑色背景上的白色粗体文本，标题包装
+    :Footers: 黑色背景上浅灰加粗小字
+
+``medium-white``
+    :Main content: 白底黑字
+    :Text capacity: 大概9行
+    :Headers: 白底黑粗字，标题包装
+    :Footers: 白色背景上的深灰加粗小字
+
+``medium-black``
+    :Main content: 白底黑字
+    :Text capacity: 大概9行
+    :Headers: 黑底白粗字
+    :Footers: 黑色背景上浅灰加粗小字
+
+``big-white``
+    :Main content: 白色背景褐色粗体字
+    :Text capacity: 大概5行
+    :Headers: 白色背景褐色粗体字，标题包装
+    :Footers: 不显示
+
+``big-black``
+    :Main content: 黑色背景白粗字
+    :Text capacity: 大概5行
+    :Headers: 黑色背景白粗字，标题包装
+    :Footers: 不显示
+
+如果主题目录包含一个名为 ``__base__`` 的文件，主题的基主题的名字会从其中读取。文件会以命名的主体、任何基主题和默认主题(所有主题的隐式基主题)递进。
+
+详见 :ref:`使用reST和S5进行简单幻灯片展示 <sshow>`.
+
+.. _fet-latex-generating tools:
+
+LaTeX生成工具
+======================
+
+.. _fet-rst2latex-py:
+
+rst2latex.py
+------------
+
+:Reader: Standalone
+:Parser: reStructuredText
+:Writer: LaTeX2e
+
+``rst2latex.py``前端工具读取独立的reStructuredText源文件并生成LaTeX2e输出。例如，需要将一个reStructuredText文件"``test.txt``"转换为LaTeX::
+
+    rst2latex.py test.txt test.tex
+
+输出文件"``test.tex``"还需要使用 ``latex`` 或 ``pdflatex`` 处理以获取DVI、PostScript或PDF格式的文档，以便打印或在屏幕上观看。
+
+详见 :ref:`使用Docutils生成LaTeX <ltx>`.
+
+.. _fet-xml-generating-tools:
+
+XML生成工具
+====================
+
+.. _fet-rst2xml-py:
+
+rst2xml.py
+----------
+
+:Reader: Standalone
+:Parser: reStructuredText
+:Writer: XML (Docutils native)
+
+``rst2xml.py`` 前端生成Docutils本地XML输出。
+其可以使用标准XML工具(如XSLT)转化为任意最终形式。 Docutils沙盒中的 xml2rst处理器就是一个例子。
+
+.. _fet-odf-openoffice-generating-tools:
+
+ODF/OpenOffice生成工具
+===============================
+
+.. _fet-rst2odt-py:
+
+rst2odt.py
+----------
+
+:Reader: Standalone
+:Parser: reStructuredText
+:Writer: ODF/.odt
+
+``rst2odt.py`` 前端工具读取独立的reStructuredText源文件并生成可以使用OpenOffice ``oowriter`` (http://www.openoffice.org/)阅读、编辑、打印的ODF/.odt 文件。需要一个样式表。样式表文件是一个包含 ``rst2odt.py`` 需要的样式定义的OpenOffice .odt 文件。详见 `Docutils的Odt Writer <odt>`.
+
+.. _fet-restructuredtext-generating-tools:
+
+reStructuredText生成工具
+=================================
+
+目前在Docutils中没有reStructuredText writer，因此 ``rst2rst.py`` 工具仍缺失。
+
+需要使用Docutils生成reStructuredText文档，你可以使用XML(Docutils本地) writer和xml2rst处理器。
+
+.. _fet-testing-debugging-tools:
+
+测试/调试工具
+=======================
+
+.. _fet-rst2pseudoxml-py:
+
+rst2pseudoxml.py
+----------------
+
+:Reader: Standalone
+:Parser: reStructuredText
+:Writer: Pseudo-XML
+
+``rst2pseudoxml.py`` 用于调试Docutils的"Reader to
+Transform to Writer"管道。它会生成一个紧凑的打印漂亮的伪XML(嵌套以缩进表示，没有结束标签)。所有元素的扩展属性会被输出，"待定"元素的内部属性也会被指定。
+
+.. _fet-quicktest-py:
+
+quicktest.py
+------------
+
+:Reader: N/A
+:Parser: reStructuredText
+:Writer: N/A
+
+``quicktest.py`` 工具用于测试reStructuredText解析器。它不使用Docutils Reader或Writer或标准Docutils命令行选项。但它有自己的I/O并直接调用解析器。解析过的文档不会发生改变。各种格式的输出都可以:
+
+- 打印漂亮的伪XML(默认)
+- 测试数据(输入和伪XML输出字符串的Python列表，对于创建新的测试用例有用)
+- 打印漂亮的本地XML
+- 原生本地XML(有或没有样式表引用)
+
+
+.. _fet-customization:
+
+---------------
+ 定制
+---------------
+
+.. _fet-command-line-options:
+
+命令行选项
+====================
+
+每个前端工具支持命令行选项来作一次性定制。需要持续性定制，使用 :ref:`配置文件 <fet-configuration-file>` 。命令行选项比配置文件设置的优先级要高
+
+在每个前端工具上使用"--help"选项来列出支持的命令行选项。命令行选项及其对应的配置文件条目名称会被列在 :ref:`Docutils配置文件 <cfg>` 文档中。
+
+
+.. _fet-configuration-file:
+
+配置文件
+===================
+
+配置文件用于持续性定制。它们可以一次设置永远起效。
+
+详见 :ref:`Docutils配置文件 <cfg>` 。
+
+
+..
+   Local Variables:
+   mode: indented-text
+   indent-tabs-mode: nil
+   sentence-end-double-space: t
+   fill-column: 70
+   End:

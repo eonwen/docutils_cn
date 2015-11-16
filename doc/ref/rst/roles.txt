@@ -1,0 +1,324 @@
+.. _roles:
+
+=========================================
+ reStructuredText解释文本角色
+=========================================
+
+:Author: eonwen
+:Contact: eonwen@hotmail.com
+
+本文档描述了引用reStructuredText解析器中实现的解释文本角色。
+
+解释文本使用反引号(`)包围文本。一个显式的角色标记可以可选的出现在文本之前或之后，以冒号分隔。例如::
+
+    This is `interpreted text` using the default role.
+
+    This is :title:`interpreted text` using an explicit role.
+
+一个默认角色可以reStructuredText通过应用来定义，其会在没有显式的指定 ``:role:`` 前缀或后缀时使用。默认的默认角色是 :ref:`:title-reference: <roles-title-reference>` 。其可以使用 :ref:`默认角色 <dt-setting-the-default-interpreted-text-role>` 指令改变。
+
+查看 :ref:`reStructuredText标记规范 <rst>` 中的 :ref:`解释文本 <rst-interpreted-text>` 章节获取语法细节。关于元素的层次结构，查看 :ref:`Docutils文档树 <dtr>` 和 `Docutils通用DTD`__ XML文档类型定义。关于解释文本角色的实现细节，查看 :ref:`创建reStructuredText解释文本角色 <critr>`.
+
+__ ../docutils.dtd
+
+
+.. contents::
+
+.. _roles-customization:
+
+---------------
+ 定制
+---------------
+
+自定义解释文本角色可以使用 :ref:`"role" <dt-custom-interpreted-text-roles>` 定义一个文档。定制的细节在每个角色中列出。
+
+.. _class:
+
+对于大多数解释文本角色， ``class`` 选项被role指令识别。 详见 
+:ref:`"role" <dt-custom-interpreted-text-roles>` 指令文档。
+
+
+.. _roles-standard-roles:
+
+----------------
+ 标准角色
+----------------
+
+.. _roles-emphasis:
+
+``:emphasis:``
+==============
+
+:Aliases: None
+:DTD Element: emphasis
+:Customization:
+    :Options: class_.
+    :Content: None.
+
+实现强调，等价于::
+
+    *text*
+    :emphasis:`text`
+
+.. _roles-literal:
+
+``:literal:``
+==============
+
+:Aliases: None
+:DTD Element: literal
+:Customization:
+    :Options: class_.
+    :Content: None.
+
+实现行内文本，等价于::
+
+    ``text``
+    :literal:`text`
+
+必须小心使用反斜杠转义。其 **不** 等价于::
+
+    ``text \ and \ backslashes``
+    :literal:`text \ and \ backslashes`
+
+第一行的反斜杠会被保留(什么也不做)，而第二行的反斜杠会转义之后的空格。
+
+.. _roles-code:
+
+``:code:``
+==========
+
+:Aliases: None
+:DTD Element: literal
+:Customization:
+    :Options: class_, language
+    :Content: None.
+
+(Docutils 0.9. 新增)
+
+``code`` 角色标记了其内容为某种正式语言的代码。
+
+对于行内代码的语法高亮， 
+:ref:`"role" <dt-custom-interpreted-text-roles>` 可以在"语言"选项中指定特定语言用来构建自定义角色。
+
+例如，下面创建了一个LaTeX特性的"latex"角色::
+
+  .. role:: latex(code)
+     :language: latex
+
+新角色的内容由 Pygments_ 语法高亮器进行解析并添加标记。阅读 :ref:`代码指令 <dt-code>` 以获取关于reStructuredText中代码解析和显示的信息。
+
+除"class_"之外，下列选项可以被识别:
+
+``language`` : 文本
+    代码语言名称。
+    详见 `支持的语言和标记格式 <supported languages and markup formats_>`_ 。
+
+.. _Pygments: http://pygments.org/
+.. _supported languages and markup formats: http://pygments.org/languages/
+
+.. _roles-math:
+
+``:math:``
+==========
+
+:Aliases: None
+:DTD Element: math
+:Customization:
+    :Options: class_
+    :Content: None.
+
+(Docutils 0.8. 新增)
+
+``math`` 角色将其内容作为数学符号(行内公式)标记。
+
+输入格式为没有“数学分隔符”(``$ $``)的LaTeX数学语法。例如::
+
+  The area of a circle is :math:`A_\text{c} = (\pi/4) d^2`.
+
+阅读 :ref:`math指令 <dt-math>` (生成显示公式)以获取更多关于reStructuredText中的数学符号的信息。
+
+
+.. _roles-pep-reference:
+
+``:pep-reference:``
+===================
+
+:Aliases: ``:PEP:``
+:DTD Element: reference
+:Customization:
+    :Options: class_.
+    :Content: None.
+
+``:pep-reference:`` 角色用于创建一个到PEP(Python增强建议)的HTTP引用。
+通常使用 ``:PEP:`` 作为别名。例如::
+
+    See :PEP:`287` for more information about reStructuredText.
+
+等价于::
+
+    See `PEP 287`__ for more information about reStructuredText.
+
+    __ http://www.python.org/peps/pep-0287.html
+
+
+.. _roles-rfc-reference:
+
+``:rfc-reference:``
+===================
+
+:Aliases: ``:RFC:``
+:DTD Element: reference
+:Customization:
+    :Options: class_.
+    :Content: None.
+
+``:rfc-reference:`` 角色用于创建一个到RFC(请求注解)的HTTP引用。
+通常使用 ``:RFC:`` 作为别名。例如::
+
+    See :RFC:`2822` for information about email headers.
+
+等价于::
+
+    See `RFC 2822`__ for information about email headers.
+
+    __ http://www.faqs.org/rfcs/rfc2822.html
+
+
+.. _roles-strong:
+
+``:strong:``
+============
+
+:Aliases: None
+:DTD Element: strong
+:Customization:
+    :Options: class_.
+    :Content: None.
+
+实现特别强调。等价于::
+
+    **text**
+    :strong:`text`
+
+.. _roles-subscript:
+
+``:subscript:``
+===============
+
+:Aliases: ``:sub:``
+:DTD Element: subscript
+:Customization:
+    :Options: class_.
+    :Content: None.
+
+实现下标。
+
+.. Tip::
+
+   需要空格或标点符号来围绕解释文本，但对于下标和商标通常是不需要的。反斜杠转义空格可以使用，空格会从处理后的文档中删除::
+
+       H\ :sub:`2`\ O
+       E = mc\ :sup:`2`
+
+   在这个例子中，替代会大大提升纯文本的可读性::
+
+       The chemical formula for pure water is |H2O|.
+
+       .. |H2O| replace:: H\ :sub:`2`\ O
+
+   阅读 `reStructuredText标记规范 <rst>` 以获取关于
+   :ref:`字符级标记 <rst-character-level-inline-markup>` 和 :ref:`替代机制 <rst-substitution-references>` 的更进一步的信息。
+
+
+.. _roles-superscript:
+
+``:superscript:``
+=================
+
+:Aliases: ``:sup:``
+:DTD Element: superscript
+:Customization:
+    :Options: class_.
+    :Content: None.
+
+实现了上标。详见上面的 :ref:`:subscript: <roles-subscript>` 的Tip。
+
+.. _roles-title-reference:
+
+``:title-reference:``
+=====================
+
+:Aliases: ``:title:``, ``:t:``.
+:DTD Element: title_reference
+:Customization:
+    :Options: class_.
+    :Content: None.
+
+``:title-reference:`` 角色用于描述书籍、期刊和其他材料的标题。等价于
+HTML的"cite"元素，并希望被HTML writers会使用"cite"典型的渲染"title_reference"元素。
+
+因为标题引用被使用斜体典型渲染，它们通常使用 ``*emphasis*`` 来标记，这会产生误导，且模糊不清。
+"title_reference"元素提供准确及明确的描述标记。
+
+假设 ``:title-reference:`` 是本例中的默认解释文本角色::
+
+    `Design Patterns` [GoF95]_ is an excellent read.
+
+下面的文档片段(:ref:`伪XML <dtr-pseudo-xml>`)的处理结果为::
+
+    <paragraph>
+        <title_reference>
+            Design Patterns
+
+        <citation_reference refname="gof95">
+            GoF95
+         is an excellent read.
+
+在标准reStructuredText解析器中， ``:title-reference:`` 是默认解释文本角色。这意味着不需要显式角色。reStructuredText的应用程序可能会制定一个不同的默认角色，此时必须使用显式的 ``:title-reference:`` 角色来包含一个 ``title_reference`` 元素。
+
+.. _roles-specialized-roles:
+
+-------------------
+ 专门角色
+-------------------
+
+.. _roles-raw:
+
+``raw``
+=======
+
+:Aliases: None
+:DTD Element: raw
+:Customization:
+    :Options: class_, format
+    :Content: None
+
+.. WARNING::
+
+   "raw"指令是一个权宜之计，允许作者绕过reStructuredText的标记。它是一个不应当滥用的功能。使用"raw"会将文档绑定到一个指定的输出格式，从而降低其兼容性。
+
+   如果你需要经常使用"raw"指令或一个"raw"分隔的解释文本角色，即表示滥用或该功能可能在reStructuredText中遗失。请将具体情况发送信息到 :ref:`Docutils用户 <dml-docutils-users>` 邮件列表。
+
+"raw"指令表示将被非接触式传递给Writer的非reStructuredText数据。在行内，其等价于 :ref:`"raw"指令 <dt-raw-data-pass-through>`; 详见文档。
+
+"raw"角色不能直接使用。 :ref:`"raw"指令 <dt-raw-data-pass-through>` 必须首先用于创建基于"raw"角色的
+自定义角色。必须在"format"选项内提供一个或多个格式(Writer名)。例如，下例创建一个HTML特性的"raw-html"角色::
+
+    .. role:: raw-html(raw)
+       :format: html
+
+该角色现在可以直接用于传递不绑定到HTML的数据。例如::
+
+    If there just *has* to be a line break here,
+    :raw-html:`<br />`
+    it can be accomplished with a "raw"-derived role.
+    But the line block syntax should be considered first.
+
+.. Tip:: 基于 "raw" 的角色应该清晰表示其原型，因此其不会出现错误。
+   建议为角色名称使用"raw-"前缀。
+
+除 "class_"之外，下列选项可以被识别:
+
+``format`` : text
+    一个或多个空格分隔的输出格式名称(Writer名称)。
