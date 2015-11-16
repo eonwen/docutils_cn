@@ -1,0 +1,546 @@
+.. 这是一个注释。注意任何初始注释是如何通过翻译到文档标题、子标题和文档信息之后被移动的。
+
+.. _demo:
+
+================================
+ reStructuredText示例
+================================
+:orphan: 本文档不能通过导航到达
+
+.. 上面是文档标题，下面是子标题。
+   它们是章节标题在解析后转换而来。
+
+.. demo-syntax-constructs:
+
+--------------------------------
+ 语法结构示例
+--------------------------------
+
+.. 目录字段(也需要转换):
+
+:Author: eonwen
+:Address: 123 Example Street
+          Example, EX  Canada
+          A1B 2C3
+:Contact: eonwen@hotmail.com
+:Authors: Me; Myself; I
+:organization: humankind
+:date: $Date: 2015-10-12 09:30:06 +0800 (Die, 03. Jän 2012) $
+:status: 工作的不错
+:revision: $Revision: 7302 $
+:version: 1
+:copyright: 本文档已发布到公有域，你可以对文档做任何事，复制、修改重新发布、购买、贩卖等等，只要你愿意。
+:field name: 这是一个通用目录字段。
+:field name 2:
+    通用目录字段可以包含多个正文元素。
+
+    像这样。
+
+:Dedication:
+
+    提供给Docutils用户和合作开发者。
+
+:abstract:
+
+    该文档是reStructuredText标记语言的示例，包含所有基础结构和很多高级结构。
+
+.. meta::
+   :keywords: reStructuredText, demonstration, demo, parser
+   :description lang=zh_CN: 该文档是reStructuredText标记语言的示例，包含所有基础结构和很多高级结构。
+
+.. contents:: 内容列表
+.. section-numbering::
+
+.. _demo-structural-elements:
+
+结构化元素
+==========
+
+章节标题
+--------
+
+线上的文字就是。
+
+过渡
+----
+
+这是一个过渡
+
+---------
+
+它分隔两个章节。
+
+正文元素
+========
+
+段落
+----
+
+一个段落
+
+行内标记
+````````
+
+段落包含文本也可以包含行内标记: *强调*,
+**重点强调**, ``行内文本``, 独立超链接(http://www.python.org), 扩展超链接(Python_), 内部交叉引用(example_), 包含嵌套的URI的扩展超链接(`Python网站 <http://www.python.org>`__), 脚注引用(手动编号 [1]_, 匿名自动编号 [#]_, 标签自动编号 [#label]_, 或符号 [*]_), 引文引用([CIT2003]_), 替代引用(|example|), 及 _`行内超链接目标` (见下面的 目标_ 反引用回这里)。
+也可以使用字符级行内标记(尽管很丑) *re*\ ``Structured``\ *Text* 。  问题由 |problematic| 文本展示(通过错误处理生成；这一个是故意的)。
+
+解释文本的默认角色是 `标题引用` 。这里有一些显式解释文本角色：一个PEP引用(:PEP:`287`); 一个RFC引用(:RFC:`2822`); 一个 :sub:`下标`; 一个 :sup:`上标`;
+和为 :emphasis:`标准` :strong:`行内`
+:literal:`标记` 提供的显式角色。
+
+.. 不要重新包装下面的段落！
+
+让我们测试一下在行内文本中包装和空格的重要性:
+``这是一个 --行内-文本 的例子，--包括某些--
+奇怪的--带有连字符的-词语。调整-你的-显示器-窗口的-宽度，以便查看这些文本是如何被包装的。-- ---- -------- 注意：  句中 单词  之间     的空格   （单词必须组成一对对的）。``
+
+如果提供了 ``--pep-引用`` 选项，必须有一个可用连接到PEP 258。
+
+.. _demo-bullet-lists:
+
+无序列表
+--------
+
+- 一个无序列表
+
+  + 嵌套无需列表
+  + 嵌套项2。
+
+- 项目2.
+
+  项目2的段落2
+
+  + 嵌套无需列表
+  + 嵌套项2。
+
+    - 三级
+    - 项目2
+
+  * 嵌套项目3
+
+.. _demo-enumerated-lists:
+
+有序列表
+--------
+
+1. 任意数字
+
+   a) 小写字母)
+
+      (i) (小写罗马字母)
+
+          A. 大写字母.
+
+             I) 大写罗马字母)
+
+2. 不以1开始的列表:
+
+   3. Three
+
+   4. Four
+
+   C. C
+
+   D. D
+
+   iii. iii
+
+   iv. iv
+
+#. 列表项也可以自动编号
+
+.. _demo_definition-lists:
+
+定义列表
+----------------
+
+术语
+    定义
+术语 : 分类器
+    定义第一段
+
+    定义第二段
+术语
+    定义
+
+.. _demo-field-lists:
+
+字段列表
+-----------
+
+:是什么: 字段列表映射字段名到字段正文，类似数据库记录。
+         其常用语扩展语法。它们是RFC2822字段的明确变体
+
+:怎么样 参数1 参数2:
+
+    字段标记是冒号、字段名、冒号
+
+    字段提可以包含一个或多个正文元素，以缩进与字段标记关联。
+
+.. _demo-option-lists:
+
+选项列表
+------------
+
+用于列出命令行选项:
+
+-a            命令行选项 "a"
+-b file       选项可以有参数和长描述
+--long        选项也可以很长
+--input=file  长选项也可以有参数
+--very-long-option
+              描述也可以从下一行开始。
+
+              描述可以包含多个正文元素，
+              无论从那里开始
+-x, -y, -z    多个选项是一个"选项组".
+-v, --verbose  通常可见: 段选项和长选项
+-1 file, --one=file, --two file
+              多个有参数的选项
+/V            DOS/VMS风格的选项
+
+选项与描述之间至少需要有两个空格
+
+.. _demo-literal-blocks:
+
+文本块
+--------------
+
+文本块由一个跟在段落后的双冒号("::")来展示（那里``-->``）。它们可以缩进::
+
+    if literal_block:
+        text = 'is left as-is'
+        spaces_and_linebreaks = 'are preserved'
+        markup_processing = None
+
+或可以被引用而无需缩进::
+
+>> Great idea!
+>
+> Why didn't I think of that?
+
+.. _demo-line-blocks:
+
+行块
+-----------
+
+| 这是一个行块。它以一个空行结束。
+|     每个新航以一个竖线开始("|")。
+|     折行和初始缩进被保留。
+| 连续行辈超装为长行；
+  它们以一个占据竖线位置的空格开始。
+|     连续行的左边不需要与上面文本
+  的左边对其。
+
+| 这是第二个行块。
+|
+| 中间的空行是允许的，但也必须以 "|" 开头。
+
+Take it away, Eric the Orchestra Leader!
+
+    | A one, two, a one two three four
+    |
+    | Half a bee, philosophically,
+    |     must, *ipso facto*, half not be.
+    | But half the bee has got to be,
+    |     *vis a vis* its entity.  D'you see?
+    |
+    | But can a bee be said to be
+    |     or not to be an entire bee,
+    |         when half the bee is not a bee,
+    |             due to some ancient injury?
+    |
+    | Singing...
+
+.. _demo-block-quotes:
+
+引用块
+------------
+
+引用快包含缩进的正文元素:
+
+    My theory by A. Elk.  Brackets Miss, brackets.  This theory goes
+    as follows and begins now.  All brontosauruses are thin at one
+    end, much much thicker in the middle and then thin again at the
+    far end.  That is my theory, it is mine, and belongs to me and I
+    own it, and what it is too.
+
+    -- Anne Elk (Miss)
+
+.. _demo-doctest-blocks:
+
+测试代码块
+--------------
+
+>>> print 'Python-specific usage examples; begun with ">>>"'
+Python-specific usage examples; begun with ">>>"
+>>> print '(cut and pasted from interactive Python sessions)'
+(cut and pasted from interactive Python sessions)
+
+.. _demo-tables:
+
+表格
+------
+
+这是一个网格表格，之后是一个简单表格:
+
++------------------------+------------+----------+----------+
+| Header row, column 1   | Header 2   | Header 3 | Header 4 |
+| (header rows optional) |            |          |          |
++========================+============+==========+==========+
+| body row 1, column 1   | column 2   | column 3 | column 4 |
++------------------------+------------+----------+----------+
+| body row 2             | Cells may span columns.          |
++------------------------+------------+---------------------+
+| body row 3             | Cells may  | - Table cells       |
++------------------------+ span rows. | - contain           |
+| body row 4             |            | - body elements.    |
++------------------------+------------+----------+----------+
+| body row 5             | Cells may also be     |          |
+|                        | empty: ``-->``        |          |
++------------------------+-----------------------+----------+
+
+=====  =====  ======
+   Inputs     Output
+------------  ------
+  A      B    A or B
+=====  =====  ======
+False  False  False
+True   False  True
+False  True   True
+True   True   True
+=====  =====  ======
+
+.. _demo-footnotes:
+
+脚注
+---------
+
+.. [1] 脚注包含正文元素、至少3个空格的统一的缩进。
+
+   这是脚注的第二段。
+
+.. [#label] 脚注可能是数字，手动编号(如 [1]_ )或使用"#"前缀
+   标签自动编号
+   这个脚注有一个标签，因此其可以指向多个位置，即作为脚注引用
+   ( [#label]_ )又作为超链接引用( label_ )。
+
+.. [#] 这个脚注自动数字编号，只使用一个匿名标签"#"。
+
+.. [*] 脚注也可以使用符号，指定一个"*"标签。
+   这是到下一个脚注的引用: [*]_ .
+
+.. [*] 这个脚注展示序列中的下一个符号。
+
+.. [4] 这是一个非引用脚注，包含一个引用到一个
+   不存在的脚注: [5]_ 。
+
+.. _demo-citations:
+
+引文
+---------
+
+.. [CIT2003] 引文是文本标签的脚注。它们可以以与脚注
+   分隔且不同的形式进行渲染。
+
+这里是上面的引用， [CIT2003]_ , 和一个 [不存在]_ 的引文。
+
+.. _demo-targets:
+
+目标
+-------
+
+.. _example:
+
+这一段被显式的"example" target所指向。可以在上面的 `行内标记`_ 之下发现一个引用。 `行内超链接 <行内超链接目标_>`_ 也是可以的。
+
+章节标题为隐式目标，通过名字指向。见 目标_ ，其为 `正文元素`_ 的一个子章节。
+
+显式扩展目标被插入到类似"Python_"的引用。
+
+.. _Python: http://www.python.org/
+
+目标可以是间接和匿名的。因此 `这个短语`__ 也能指向 目标_ 章节。
+
+__ 目标_
+
+这是一个 `没有目标的超链接引用`_ ，其会生成一个错误。
+
+链接名称重复
+````````````
+
+重复的章节标题或其他隐式链接会生成"info"(一级) 系统信息。重复的显式链接会生成"warning"(二级)系统信息。
+
+链接名称重复
+````````````
+
+因为有两个章节标题叫"链接名称重复"，我们不能使用名字唯一指向他们中的任何一个。如果我们这么干，会生成一个错误。
+
+.. _demo-directives:
+
+指令
+----------
+
+.. contents:: :local:
+
+这是一个众多reStructuredText指令中的一个的例子。其他的，详见 `指令 <../../ref/rst/directives.html>`_
+
+.. _demo-document-parts:
+
+文档部分
+``````````````
+
+"contents"指令的一个例子可以看看上面的章节(local反标题目录列表)，及文档开始的部分(全文的 `内容列表`_)。
+
+.. _demo-images:
+
+图片
+``````
+
+一个图片指令(也是可点击的 -- 一个超链接引用):
+
+.. image:: images/title.png
+   :target: demo-directives_
+
+一个figure指令:
+
+.. figure:: images/title.png
+   :alt: reStructuredText, 标记语法
+
+   figure是一个含有标题和/铭文的图片:
+
+   +------------+-----------------------------------------------+
+   | re         | Revised, revisited, based on 're' module.     |
+   +------------+-----------------------------------------------+
+   | Structured | Structure-enhanced text, structuredtext.      |
+   +------------+-----------------------------------------------+
+   | Text       | Well it is, isn't it?                         |
+   +------------+-----------------------------------------------+
+
+   这个段落也是铭文的一部分。
+
+.. _demo-admonitions:
+
+警告
+```````````
+
+.. Attention:: Directives at large.
+
+.. Caution::
+
+   Don't take any wooden nickels.
+
+.. DANGER:: Mad scientist at work!
+
+.. Error:: Does not compute.
+
+.. Hint:: It's bigger than a bread box.
+
+.. Important::
+   - Wash behind your ears.
+   - Clean up your room.
+   - Call your mother.
+   - Back up your data.
+
+.. Note:: This is a note.
+
+.. Tip:: 15% if the service is good.
+
+.. WARNING:: Strong prose may provoke extreme mental exertion.
+   Reader discretion is strongly advised.
+
+.. admonition:: And, by the way...
+
+   You can make up your own admonition too.
+
+.. _demo-topics-sidebars-rubrics:
+
+主题、侧边栏和红体
+`````````````````````````````
+
+.. sidebar:: 侧边栏标题
+   :subtitle: 可选的子标题
+
+   这是一个侧边栏。用于主文之外的文字。
+
+   .. rubric:: 这是侧边栏里边的红体
+
+   侧边栏经常出现在主文旁边，有边框和背景色。
+
+.. topic:: 主题标题
+
+   这是一个主题
+
+.. rubric:: 这是一个红体
+
+.. _demo-target-footnotes:
+
+目标脚注
+````````````````
+
+.. target-notes::
+
+.. _demo-replacement-text:
+
+替换文本
+````````````````
+
+建议试试 |Python|_ .
+
+.. |Python| replace:: Python, 最好的语言
+
+.. _demo-compound-paragraph:
+
+复合段落
+``````````````````
+
+.. compound::
+
+   这个段落包含一个文本块::
+
+       Connecting... OK
+       Transmitting data... OK
+       Disconnecting... OK
+      
+   且因此包含一个简单的段落、一个文本块和另一个简单的段落。
+   尽管如此，它们是一个段落。
+
+这个结构称为 *复合段落* 可以由"compound"指令生成。
+
+.. demo-substitution-definitions:
+
+替代定义
+------------------------
+
+一个行内图片 (|example|) 的例子:
+
+.. |EXAMPLE| image:: images/biohazard.png
+
+(替代定义在HTML源文件中不可见)
+
+.. _demo-comments:
+
+注释
+--------
+
+这是一个:
+
+.. 注释以两个点和一个空格开始。可以接除了脚注、超链接、指令或替代定义之外的任何东西
+
+   双连线符 -- "--" -- 必须在HTML输出中转义。
+
+(阅读HTML源以查看注释)
+
+.. _demo-error-handling:
+
+错误处理
+==============
+
+任何在处理时捕获的错误均会生成系统信息。
+
+\|\*\*\* Expect 6 errors (including this one). \*\*\*\|
+
+下面有6个信息，自动生成章节，"Docutils System Messages":
+
+.. 章节由Docutils自动生成

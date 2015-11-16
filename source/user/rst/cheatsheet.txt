@@ -1,0 +1,143 @@
+.. _cheatsheet:
+
+=====================================================
+ reStructuredText_ 小抄: 语法备忘
+=====================================================
+:Author: eonwen
+:Contact: eonwen@hotmail.com
+:orphan: 本文档不能通过导航到达
+
+.. contents::
+.. section-numbering::
+
+.. NOTE:: 如果你以HTML格式阅读本文档，请阅读 `<cheatsheet.txt>`_ 以查看输入语法示例。
+
+.. _cs-section-structure:
+
+章节结构
+========
+章节标题为文本加下划线或上下划线。
+
+正文元素
+========
+
+网格列表:
+
++--------------------------------+-----------------------------------+
+| Paragraphs are flush-left,     | Literal block, preceded by "::":: |
+| separated by blank lines.      |                                   |
+|                                |     Indented                      |
+|     Block quotes are indented. |                                   |
++--------------------------------+ or::                              |
+| >>> print 'Doctest block'      |                                   |
+| Doctest block                  | > Quoted                          |
++--------------------------------+-----------------------------------+
+| | Line blocks preserve line breaks & indents. [new in 0.3.6]       |
+| |     Useful for addresses, verse, and adornment-free lists; long  |
+|       lines can be wrapped with continuation lines.                |
++--------------------------------------------------------------------+
+
+简单表格:
+
+================  ============================================================
+类表类型           示例( `文本源 <cheatsheet.txt>`_ 中的语法)
+================  ============================================================
+无序列表           * 列表项以"-", "+",或"*"开始
+有序列表           1. 列表项使用"1.", "A)", and "(i)"
+                   #. 也可以自动编号
+定义列表           术语左对齐: 可选的分类器
+                      定义是缩进的，中间没有空行
+字段列表           :字段名: 字段正文
+选项列表           -o  选项与描述之间至少有两个空格
+================  ============================================================
+
+================  ============================================================
+显示标记          举例( `文本源`_ 中可见)
+================  ============================================================
+脚注              .. [1] 手动编号或 [#] 自动编号
+                     (甚至是 [#labelled]) 或 [*] auto-symbol
+引文              .. [CIT2002] 一个引文。
+超链接            .. _reStructuredText: http://docutils.sf.net/rst.html
+                  .. _indirect target: reStructuredText_
+                  .. _internal target:
+匿名超链接        __ http://docutils.sf.net/docs/ref/rst/restructuredtext.html
+指令("::")        .. image:: images/biohazard.png
+替代定义          .. |替代| replace:: 类似一个行内指令
+注释              .. 任何其他东西
+空注释            (一行中只有".."，前后均为空行，
+                  用于分隔缩进上下文)
+================  ============================================================
+
+.. _cs-inline-markup:
+
+行内标记
+========
+*强调*; **特别强调**; `解释文本`; `包含 role`:emphasis: 的解释文本; ``行内文本``; 独立超链接，
+http://docutils.sourceforge.net; 命名的引用, reStructuredText_;
+`匿名引用`__; 脚注引用, [1]_; 引文引用,
+[CIT2002]_; |替代|; _`行内内部目标`.
+
+.. cs-directive-quick-reference:
+
+指令快速手册
+============
+详见 `指令 <../../ref/rst/directives.html>`_ 。
+
+================  ============================================================
+指令名称          描述 (Docutils版本添加，使用[括号])
+================  ============================================================
+注意              明确劝告; 还有 "caution", "danger",
+                  "error", "hint", "important", "note", "tip", "warning"
+训诫              Generic titled admonition: ``.. admonition:: By The Way``
+图片              ``.. image:: picture.png``; 可以有许多选项
+计算              类似图片，但有可选的标题和图例
+话题              ``.. topic:: Title``; 类似迷你章节
+侧边栏            ``.. sidebar:: Title``; 类似迷你平行文档
+parsed-literal    解析过行内标记的文本块
+红字              ``.. rubric:: Informal Heading``
+铭文              包含class="epigraph"的引用块
+高亮              包含class="highlights"的引用块
+pull-quote        包含class="pull-quote"的引用块
+compound          复合段落 [0.3.6]
+container         通用块级容器元素[0.3.10]
+table             创建一个明明的表格[0.3.1]
+list-table        创建一个统一的2级无序列表[0.3.8]
+csv-table         使用CSV数据创建表格[0.3.4]
+contents          生成一个内容表格
+sectnum           自动编号章节、子章节等等
+header, footer    创建文档装饰[0.3.8]
+target-notes      为每个扩展链接创建一个显式脚注
+math              数学符号(使用LaTeX格式输入)
+meta              HTML性质的元数据
+include           将一个额外的reST文件作为行内读入
+raw               传递给输出的非reST数据
+replace           为替代定义替换文本
+unicode           为替代定义转换Unicode字符代码
+date              为替代定义生成今天的日期
+class             为紧接的元素设置"class"属性
+role              创建一个自定义解释文本角色[0.3.2]
+default-role      设置默认解释文本角色[0.3.10]
+title             设置元数据文档标题[0.3.10]
+================  ============================================================
+
+.. _cs-itf-quick-reference:
+
+解释文本角色快速手册
+=====================
+
+详见 `角色 <../../ref/rst/roles.html>`_ 。
+
+================  ============================================================
+角色名            描述
+================  ============================================================
+emphasis          等价于*emphasis*
+literal           等价于``literal``，但处理反斜杠转义
+math              数学符号(使用LaTeX格式输入)
+PEP               指向一个编号的Python增强建议
+RFC               指向一个Internet Request For Comments
+raw               对非reST数据有效；不可直接使用 [0.3.6]
+strong            等价于**strong**
+sub               下标
+sup               上标
+title             标题链接；标准默认角色
+================  ============================================================

@@ -1,0 +1,206 @@
+.. _project-doc-overview:
+
+==========================================
+ Docutils_ 项目文档概述
+==========================================
+
+:Author: eonwen
+:Contact: eonwen@hotmail.com
+
+最新的工作文档可以独立访问以下链接或查看 `Docutils分发`_ 的 ``doc`` 文件夹.
+
+.. _Docutils: http://docutils.sourceforge.net/
+.. _Docutils分发: http://docutils.sourceforge.net/#download
+
+.. contents::
+
+.. _docutils-stakeholders:
+
+Docutils相关
+============
+
+Docutils相关可以以几种方式归类:
+
+1. 终端用户: reStructuredText和Docutils工具的用户。
+   尽管有一些是开发者(如Python开发者为其源文件中的
+   文档字符串利用reStructuredText)，但许多不是。
+
+2. 客户端开发者: 开发者使用Docutils作为一个库，编程人员 *使用* 
+   Docutils进行开发。
+
+3. 组件开发者: 那些实现与Docutils分离的指定应用程序组件、指令
+   和/或角色的人。
+
+4. 核心开发者: Docutils基代码的开发者和Docutils项目社区的参与者。
+
+5. 重实现者: Docutils的替代实现的开发者。
+
+这些组中有许多重叠的部分。大部分(也许是全部)核心开发者、组件开发者、客户端开发者和重实现者也是终端用户。核心开发者也是客户端开发者，同时还可能是其他项目的组件开发者。组件开发者也是客户端开发者。
+
+.. _project-fundamentals:
+
+项目基本原则
+============
+
+这些文件是Docutils全部相关内容。它们被保存在Docutils项目的顶级文件夹。
+
+:README.txt_: 项目概述: 快速开始、需求、安装和用法。
+:COPYING.txt_: Docutils重新分发的条件，包含证书的链接。
+:FAQ.txt_: Docutils常见问题。如果你有问题或争论，有很大可能已经在这里回答了。
+:BUGS.txt_: 已知问题的列表及如何报告一个bug。
+:RELEASE-NOTES.txt_: 最近版本的主要修改的摘要。
+:HISTORY.txt_: Detailed的更新记录。
+:THANKS.txt_: 致谢。
+
+.. _README.txt: ../README.html
+.. _BUGS.txt: ../BUGS.html
+.. _COPYING.txt: ../COPYING.html
+.. _Docutils FAQ:
+.. _FAQ.txt: ../FAQ.html
+.. _RELEASE-NOTES.txt: ../RELEASE-NOTES.html
+.. _HISTORY.txt: ../HISTORY.html
+.. _THANKS.txt: ../THANKS.html
+
+
+.. _user:
+
+``user/``: 为终端用户提供的介绍和教程材料
+=========================================
+
+Docutils通用:
+
+* `Docutils前端工具 <user/tools.html>`__
+* `Docutils配置 <user/config.html>`__
+* `Docutils邮件列表 <user/mailing-lists.html>`__
+* `Docutils链接列表 <user/links.html>`__
+
+Writer指定:
+
+* `使用reStructuredText和S5的简单幻灯片 <user/slide-shows.html>`__
+* `Docutils LaTeX Writer <user/latex.html>`__
+* `Docutils ODF/OpenOffice/odt Writer <user/odt.html>`__
+
+`reStructuredText <ref/rst/restructuredtext.html>`_:
+
+* `ReStructuredText介绍(HTML) <user/rst/quickstart.html>`__ (或 `文本源 <user/rst/quickstart.txt>`__)
+* `reStructuredText快速开始 <user/rst/quickref.html>`__ (用户手册)
+* `reStructuredText小抄 <user/rst/cheatsheet.html>`__ (仅文本；1页语法、1页指令和角色参考手册)
+* `reStructuredText示例 <user/rst/demo.html>`_ (reStructuredText大部分功能的示例，你也可以看看 `文本源 <user/rst/demo.txt>`__)
+
+编辑器支持:
+
+* `reStructuredText的Emacs支持 <user/emacs.html>`_
+
+
+.. _ref:
+
+``ref/``: 针对所有组的参考材料
+==============================
+
+这些材料中许多最初是作为开发者规范的，但现在它们已经成熟并由终端用户和客户端开发者使用，它们已经成为了参考材料。成功的由规范变为了参考材料。
+
+Docutils通用:
+
+* `The Docutils Document Tree <ref/doctree.html>`__ (不完整)
+* `Docutils变形 <ref/transforms.html>`__
+* `Docutils通用DTD <ref/docutils.dtd>`__
+* `OASIS XML交换表格模型声明模块 <ref/soextblx.dtd>`__ (CALS tables DTD module)
+
+尽管不再"ref"文件夹中， `PEP 258`_ 对于任何Docutils开发者来说都是一个必读参考。
+
+reStructuredText_:
+
+* `reStructuredText介绍 <ref/rst/introduction.html>`__
+  (包括reStructuredText的 `目标 <ref/rst/introduction.html#goals>`__ 和
+  `历史 <ref/rst/introduction.html#history>`__ )
+* `reStructuredText标记规范 <ref/rst/restructuredtext.html>`__
+* `reStructuredText指令 <ref/rst/directives.html>`__
+* `reStructuredText解释文本角色 <ref/rst/roles.html>`__
+* `reStructuredText标准定义文件 <ref/rst/definitions.html>`_
+
+史前:
+
+* `Setext文档镜像 <http://docutils.sourceforge.net/mirror/setext.html>`__
+
+.. _peps:
+
+``peps/``: Python增强建议
+=========================
+
+* `PEP 256: 文档字符串处理系统框架`__ 是一个高级通用建议。[`PEP 256`__ 在 `主仓库`_ 中]
+* `PEP 257: 文档字符串协议`__ 地址文档字符串风格并触及内容。[`PEP 257`__ 在 `主仓库`_ 中]
+* `PEP 258: Docutils设计规范`__ 是Docutils的体系结构概述。它文档化了设计问题及实现细节。[`PEP 258`__ 在 `主仓库`_ 中]
+* `PEP 287: reStructuredText文档字符串格式`__ 提出了一个标准标记语法。[`PEP 287`__ 在 `主仓库`_ 中]
+
+请注意， `主仓库`_ 中的PEPs可能不是最新版本，反之其为本地版本。
+
+__ peps/pep-0256.html
+__ http://www.python.org/peps/pep-0256.html
+__ peps/pep-0257.html
+__ http://www.python.org/peps/pep-0257.html
+.. _PEP 258:
+__ peps/pep-0258.html
+__ http://www.python.org/peps/pep-0258.html
+__ peps/pep-0287.html
+__ http://www.python.org/peps/pep-0287.html
+.. _主仓库: http://www.python.org/peps/
+
+
+.. _api:
+
+``api/``: 客户端开发者API参考材料
+=================================
+
+* `Docutils发布者 <api/publisher.html>`__
+* `Docutils中的命令行前端工具 <api/cmdline-tool.html>`__
+* `Docutils运行时设置 <api/runtime-settings.html>`__
+* (`Docutils变形 <ref/transforms.html>`__ 应该移动到这里)
+
+`PEP 258`_ 是Docutils的结构体系的概述。
+
+
+.. _howto:
+
+``howto/``: 开发者操作指南
+=======================================
+
+* **安全:** `安全的部署Docutils <howto/security.html>`__
+* `为Docutils编写HTML样式表 <howto/html-stylesheets.html>`__
+* `Docutils国际化 <howto/i18n.html>`__
+* `创建reStructuredText指令 <howto/rst-directives.html>`__
+* `创建reStructuredText解释文本角色 <howto/rst-roles.html>`__
+
+
+.. _dev:
+
+``dev/``: 核心开发者开发笔记和计划
+==================================
+
+Docutils通用:
+
+* `Docutils黑客向导 <dev/hacking.html>`__
+* `Docutils分发服务器向导 <dev/distributing.html>`__
+* `Docutils待办清单 <dev/todo.html>`__
+* `Docutils项目政策 <dev/policies.html>`__
+* `Docutils网站 <dev/website.html>`__
+* `Docutils发布程序 <dev/release.html>`__
+* `Docutils子版本仓库 <dev/repository.html>`__
+* `Docutils测试 <dev/testing.html>`__
+* `Docstring语义 <dev/semantics.html>`__ (incomplete)
+* `Python源文件阅读器 <dev/pysource.html>`_ (incomplete)
+* `Docutils Python DTD <dev/pysource.dtd>`_ (experimental)
+* `Enthought API文档工具计划 <dev/enthought-plan.html>`_
+* `Enthought API文档工具需求建议书 <dev/enthought-rfp.html>`_
+
+reStructuredText_:
+
+* `reStructuredText语法替代的记录 <dev/rst/alternatives.html>`__
+* `StructuredText的问题 <dev/rst/problems.html>`__
+
+..
+   Local Variables:
+   mode: indented-text
+   indent-tabs-mode: nil
+   sentence-end-double-space: t
+   fill-column: 70
+   End:

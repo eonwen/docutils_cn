@@ -1,0 +1,1549 @@
+.. _directives:
+
+=============================
+ reStructuredText指令
+=============================
+:Author: eonwen
+:Contact: eonwen@hotmail.com
+
+
+本文档描述了reStructuredText解析器手册中已经实现的指令。
+
+指令语法如下::
+
+    +-------+-------------------------------+
+    | ".. " | 指令类型 "::" directive       |
+    +-------+ block                         |
+            |                               |
+            +-------------------------------+
+
+指令以一个显示标记开始（两个点一个空格），后面跟指令类型和两个冒号
+(应该说是"指令标记")。指令块紧跟在指令标记之后，同时包含其后的缩进行。指令块被分为参数、选项（一个字段列表)和内容，它们都会呈现出来。
+查看 :ref:`reStructuredText标记规范 <rst>` 的 :ref:`指令 <rst-directives>` 章节以获取语法细节。
+
+下面列出了"文档树元素"(文档树元素名称；XML DTD 通用标识符)对应的独立指令。元素的层次结构的细节，详见 :ref:`Docutils文档树 <dtr>` 和 `Docutils通用DTD <../docutils.dtd>`_ XML文档类型定义。关于指令的实现细节，查看 :ref:`创建reStructuredText指令 <crd>`。
+
+.. contents::
+
+.. section-numbering::
+
+.. _dt-admonitions:
+
+-------------
+ 警告
+-------------
+
+.. _attention:
+.. _caution:
+.. _danger:
+.. _error:
+.. _hint:
+.. _important:
+.. _note:
+.. _tip:
+.. _warning:
+
+.. _dt-Specific-Admonitions:
+
+具体警告
+====================
+
+:Directive Types: "attention", "caution", "danger", "error", "hint",
+                  "important", "note", "tip", "warning", "admonition"
+:Doctree Elements: attention, caution, danger, error, hint, important,
+                   note, tip, warning, :ref:`admonition <dtr-admonition>`, title
+:Directive Arguments: None.
+:Directive Options: `:class:`_, `:name:`_
+:Directive Content: 解释为正文元素
+
+警告被特别的标记为"topics"，可以呈现在任何原始正文元素呈现的位置。它们包含任意正文元素。通常，警告被渲染为文档中的一个偏移块，有时是一个匹配警告类型的标题的概述或阴影。例如::
+
+    .. DANGER::
+       Beware killer rabbits!
+
+该指令可能被渲染为如下东西::
+
+    +------------------------+
+    |        !DANGER!        |
+    |                        |
+    | Beware killer rabbits! |
+    +------------------------+
+
+下列警告指令已经实现:
+
+- attention
+- caution
+- danger
+- error
+- hint
+- important
+- note
+- tip
+- warning
+
+任何跟在指令指示器后的文本(在同一行和/或下一行缩进)都会被解释为一个指令块并被解析为普通的正文元素。例如，下面的"note"警告指令包含一个段落和一个有两个列表项组成的无序列表::
+
+    .. note:: This is a note admonition.
+       This is the second line of the first paragraph.
+
+       - The note contains all indented body elements
+         following.
+       - It includes this bullet list.
+
+.. _dt-generic-admonition:
+
+通用警告
+==================
+
+:Directive Type: "admonition"
+:Doctree Elements: :ref:`admonition <dtr-admonition>`, title
+:Directive Arguments: One, required (admonition title)
+:Directive Options: Possible, see below.
+:Directive Content: Interpreted as body elements.
+
+这是一个通用标题化的警告。标题可以是作者需要的任何东西
+
+作者提供的标题也会在被转换为一个有效标识符后(小写；非字母字符被转换为单个连字符；以"admonition-"为前缀)用作 :ref:`"类" <dtr-classes>` 的属性值::
+
+    .. admonition:: And, by the way...
+
+       You can make up your own admonition too.
+
+变为如下文档树(伪XML)::
+
+    <document source="test data">
+        <admonition classes="admonition-and-by-the-way">
+            <title>
+                And, by the way...
+            <paragraph>
+                You can make up your own admonition too.
+
+:ref:`通用选项 <dt-common-options>` 会被识别:
+
+``class`` : 文本
+    重写计算后的 :ref:`"类" <dtr-classes>` 属性值
+
+``name`` : 文本
+  添加 `文本` 到admonition元素的 :ref:`"名称" <dtr-names>` 属性.
+
+.. _dt-images:
+
+--------
+ 图片
+--------
+
+有两个图片指令: "image"和"figure"
+
+.. _dt-image:
+
+图片
+=====
+
+:Directive Type: "image"
+:Doctree Element: :ref:`图片 <dtr-image>`
+:Directive Arguments: One, required (image URI).
+:Directive Options: Possible.
+:Directive Content: None.
+
+一个"image"是一个简单的图片::
+
+    .. image:: picture.png
+
+行内图片可以在 :ref:`替代定义 <rst-substitution-definitions>` 中使用"image"指令来定义。
+
+图片源文件的URI在指令参数中确定。因为有超链接目标，图片URI可以与显式标记开始字符和目标名称在同一行开始，也可以在紧跟的缩进文本块中(中间没有空行)开始。如果连接块有多行，它们会被删除开始和结束的空格并合并到一起。
+
+.. _dt-image-options:
+
+可选的，图片链接块可以包含一个平面字段列表，图片选项。例如::
+
+    .. image:: picture.jpeg
+       :height: 100px
+       :width: 200 px
+       :scale: 50 %
+       :alt: alternate text
+       :align: right
+
+下列选项可以被识别:
+
+``alt`` : 文本
+    替换文本: 当应用无法显示图片时，会显示图片的一个简短的描述或
+    由应用为视觉受损的用户读出。
+
+``height`` : :ref:`长度 <rst-length-units>`
+    图片所需要的高。用于存储空间或比例尺图片的纵向。当"scale"也被
+    指定了，它们会组合到一起。例如，一个高位200px且比例尺为50等
+    价于高位100px且没有比例尺。
+
+``width`` : 当前行宽度的 :ref:`长度 <rst-length-units>` 或 :ref:`百分比 <rst-percentage-units>`
+    图片的宽度。用于存储空间或比例尺图片的横向类似"height"，当指定
+    "scale"选项，则会被组合。
+
+``scale`` : 整数百分比("%"符号是可选的)
+    图片的统一缩放因子。默认"100%"，即无缩放。
+
+    如果未指定高度和宽度选项，如果安装了 `Python图片库`_ (PIL)且图片有效，则其会被会用于决定它们。
+
+``align`` : "top", "middle", "bottom", "left", "center", or "right"
+    图片的对齐方式，等价于HTML的 ``<img>`` 标签的"align"属性。
+    值"顶端"、"居中"、"底部"用于控制图片的纵向对齐(与文本基线关联)。它们只对行内图片(替代)有用。
+    值"左"、"中"、"右"用于控制图片的横向对齐，允许图片漂浮，文字围绕
+    图片。具体的行为取决于浏览器或用于渲染的软件。
+
+``target`` : 文本(URI或引用名称)
+    将图片变为超链接引用("可点击")。可选参数是一个URI(相对或绝对)，或一个包含下划线前缀的 :ref:`引用名称 <rst-reference-names>` 。
+
+
+以及通用选项 `:class:`_ and `:name:`_.
+
+.. _dt-figure:
+
+figure
+======
+
+:Directive Type: "figure"
+:Doctree Elements: :ref:`dtr-figure`, :ref:`图片 <dtr-image>`, :ref:`标题 <dtr-caption>`, :ref:`铭文 <dtr-legend>`
+:Directive Arguments: One, required (image URI).
+:Directive Options: Possible.
+:Directive Content: Interpreted as the figure caption and an optional
+                    legend.
+
+一个"figure"指令由 :ref:`图片 <dtr-image>` 数据(包含 :ref:`图片选项 <dt-image-options>`)和一个可选的标题(一个单行段落)和一个可选的铭文(任意正文元素)组成。对于基于页面输出的媒体，如果这对页面布局有帮助，figures可以浮动到一个不同的位置::
+
+    .. figure:: picture.png
+       :scale: 50 %
+       :alt: map to buried treasure
+
+       这是figure的标题(一个简单的段落)。
+
+       铭文由标题后的所有元素组成。在本例中，其由本段和之后的表格组成:
+
+       +-----------------------+-----------------------+
+       | Symbol                | Meaning               |
+       +=======================+=======================+
+       | .. image:: tent.png   | Campground            |
+       +-----------------------+-----------------------+
+       | .. image:: waves.png  | Lake                  |
+       +-----------------------+-----------------------+
+       | .. image:: peak.png   | Mountain              |
+       +-----------------------+-----------------------+
+
+标题段落之前和铭文段落之前必须有空行。指定一个没有标题的铭文，在标题
+的位置使用空注释("..")。
+
+"figure"指令支持"image"指令的所有选项(见上述 :ref:`图片选项 <dt-image-options>` )。这些选项(除了"对齐")会被传递给图片。
+
+``align`` : "left", "center", or "right"
+    figure的横向对齐，允许图片浮动及文字围绕它。具体行为取决于浏览器
+    或渲染它的软件。
+
+另外，下列选项可以被识别:
+
+``figwidth`` : "image", 当前行宽度的 :ref:`长度 <rst-length-units>` 或 :ref:`百分比 <rst-percentage-units>`
+    figure的宽度。限制figure使用的横向空间。允许使用一个特殊的值
+    "image"，此时使用所包含的图片的实际宽度(需要 `Python图片库`_)。如果图片文件无法找到或需要的软件无法使用，该选项
+    会被忽略。
+
+    设置"figure"文档树元素的"width"属性。
+
+    该选项不缩放包含的图片，需要使用"width"图片选项来缩放::
+
+        +---------------------------+
+        |        figure             |
+        |                           |
+        |<------ figwidth --------->|
+        |                           |
+        |  +---------------------+  |
+        |  |     image           |  |
+        |  |                     |  |
+        |  |<--- width --------->|  |
+        |  +---------------------+  |
+        |                           |
+        |The figure's caption should|
+        |wrap at this width.        |
+        +---------------------------+
+
+``figclass`` : 文本
+    在figure元素上设置一个 :ref:`"类" <dtr-classes>` 属性值。详见下面的 :ref:`类 <dt-class>` 指令。
+
+.. _dt-body-elements:
+
+---------------
+ 正文元素
+---------------
+
+.. _dt-topic:
+
+话题
+=====
+
+:Directive Type: "topic"
+:Doctree Element: :ref:`话题 <dtr-topic>`
+:Directive Arguments: 1, required (topic title).
+:Directive Options: `:class:`_, `:name:`_
+:Directive Content: 解释为话题正文
+
+一个话题类似于一个包含标题或自包含章节而无子章节的引用块。使用话题指令来表示一个与文档流程隔离的自包含的想法。
+话题可以在任何章节或过度出现的地方。正文元素和话题不能包含嵌套话题。
+
+指令的唯一的参数被解释为话题的标题，下一行必须是空行。所有后面的行组成话题的正文（解释为正为元素），例如::
+
+    .. topic:: Topic Title
+
+        之后的所缩进行包含话题的正文
+        并不解释为正文元素
+
+.. _dt-sidebar:
+
+侧边栏
+=======
+
+:Directive Type: "sidebar"
+:Doctree Element: :ref:`侧边栏 <dtr-sidebar>`
+:Directive Arguments: One, required (sidebar title).
+:Directive Options: Possible (see below).
+:Directive Content: Interpreted as the sidebar body.
+
+侧边栏类似正好在其他文档内的小型、平行文档，提供关联或引用材料。
+侧边栏通常通过边框和漂浮偏移到页面的旁边。页面的主文流过它。
+侧边栏也可以连接到内容在文档主文之外的脚注。
+
+侧边栏可以在章节或过度可以出现的任何地方。正文元素(包括侧边栏)不
+能包含嵌套的侧边栏。
+
+指令的单个参数被解释为侧边栏标题，其后跟子标题选项（下述），下一行必须为空行。随后的行组成侧边栏正文，被解释为解释为正文元素，例如::
+
+    .. sidebar:: Sidebar Title
+       :subtitle: Optional Sidebar Subtitle
+
+       Subsequent indented lines comprise
+       the body of the sidebar, and are
+       interpreted as body elements.
+
+下列选项可以被识别:
+
+``subtitle`` : 文本
+    侧边栏子标题
+
+也可以识别通用选项 `:class:`_ 和 `:name:`_.
+
+.. _dt-line-block:
+
+行块
+==========
+
+.. admonition:: 已被废弃
+
+   行块指令已被废弃，使用 `行块语法 <line block syntax_>`_ 替代。
+
+   .. _line block syntax: restructuredtext.html#rst-line-blocks
+
+:Directive Type: "line-block"
+:Doctree Element: :ref:`行块 <dtr-line-block>`
+:Directive Arguments: None.
+:Directive Options: `:class:`_, `:name:`_
+:Directive Content: Becomes the body of the line block.
+
+行块指令构造一个元素，其中的折行和初始缩进是有意义的，同时支持行内标记。其等价于一个使用不同方式渲染的解析过的文本块: 通常在一个普通的衬线字体,而不是一个打字机/等宽字体，也不自动缩进。行块对于地址块和诗歌、歌词等结构本身有意义的东西很有用。例如，下面是一个经典::
+
+    "To Ma Own Beloved Lassie: A Poem on her 17th Birthday", by
+    Ewan McTeagle (for Lassie O'Shea):
+
+        .. line-block::
+
+            Lend us a couple of bob till Thursday.
+            I'm absolutely skint.
+            But I'm expecting a postal order and I can pay you back
+                as soon as it comes.
+            Love, Ewan.
+
+
+
+.. _dt-parsed-literal:
+
+解析过的文本块
+====================
+
+:Directive Type: "parsed-literal"
+:Doctree Element: :ref:`文本块 <dtr-literal-block>`
+:Directive Arguments: None.
+:Directive Options: `:class:`_, `:name:`_
+:Directive Content: 变为文本块的正文
+
+与原始的文本块不同，解析过的文本块指令构造一个文本内的行内标记解析过的文本块。它等价于使用不同方式渲染的 :ref:`行块 <dt-line-block>` : 典型的在一个打字机/等宽字体中，类似一个原始文本块。解析过的文本块对于添加超链接到代码实例很有用。
+
+注意，必须小心文本，因为行内标记会被识别，对于解析没有任何识别。反斜杠转义对于组织非缩进解析适用。同时，因为标记字符被解析器删除，必须注意纵向对齐。解析过的"ASCII art"只是一个戏法，额外的空格才更合适。
+
+举例，内容模块的所有的元素名都是连接::
+
+    .. parsed-literal::
+
+       ( (title_, subtitle_?)?,
+         decoration_?,
+         (docinfo_, transition_?)?,
+         `%structure.model;`_ )
+
+.. _dt-code:
+
+代码
+====
+
+:Directive Type: "code"
+:Doctree Element: :ref:`文本块 <dtr-literal-block>`, :ref:`行内元素 <dtr-inline-elements>`
+:Directive Arguments: One, optional (formal language).
+:Directive Options: name, class, number-lines.
+:Directive Content: Becomes the body of the literal block.
+:Configuration Setting: :ref:`语法高亮 <cfg-syntax-highlight>`.
+
+(Docutils 0.9 新增)
+
+代码指令构造已给文本块。如果指定了代码的语言，内容会被 Pygments_ 语法高亮器解析，并根据其句法范畴使用类参数保存在嵌套的 :ref:`行内元素 <dtr-inline-elements>` 中。实际高亮需要一个样式表(如， `Pygments生成的`__, 例子参见 `sandbox/stylesheets`__ )。
+
+解析可以使用 :ref:`语法高亮 <cfg-syntax-highlight>` 配置设置和命令行选项或指定语言作为`:class:`_ 选项而非指令参数
+关闭。这也会在 Pygments_ 未安装或语言不在 `支持的语言和标记格式 <supported languages and markup formats_>`_ 中时避免警告。
+
+对于行内代码，使用 :ref:`"代码"角色 <roles-code>` 。
+
+__ http://pygments.org/docs/cmdline/#generating-styles
+__ http://docutils.sourceforge.net/sandbox/stylesheets/
+.. _Pygments: http://pygments.org/
+.. _supported languages and markup formats: http://pygments.org/languages/
+.. _"code" role: roles.html#code
+
+
+下列选项能被识别:
+
+``number-lines`` : [以数字开始]
+    在每行之前有一个行号。可选参数是第一行的行号(默认为1)。
+
+也可以识别通用选项 `:class:`_ 和 `:name:`_.
+
+例子::
+  下列指令的内容::
+
+    .. code:: python
+
+      def my_function():
+          "just a test"
+          print 8/2
+
+  会被作为Python源代码解析并标记。
+
+.. _dt-math:
+
+数学
+====
+
+:Directive Type: "math"
+:Doctree Element: :ref:`数学 <dtr-math-block>`
+:Directive Arguments: One, optional: prepended to content.
+:Directive Options: `:class:`_, `:name:`_
+:Directive Content: 解释为一个数学块。内容快由空行分
+                    割，并输出为单独的数学快 文档树元素.
+:Configuration Setting: :ref:`数学输出 <cfg-math-output>`
+
+(Docutils 0.8 新增)
+
+数学指令在文档中插入数学内容的块(显示公式、方程)。输入格式为 *LaTeX数学语法*\ [#数学语法]_ ，同时支持Unicode符号。举例::
+
+  .. math::
+
+    α_t(i) = P(O_1, O_2, … O_t, q_t = S_i λ)
+
+仅通过转换为许多输出格式支持 *LaTeX math* 的一个子集。对于HTML :ref:`数学输出 <cfg-math-output>` 配置设置(或对应的 ``--数学-输出`` 命令行选项)选择使用支持的不同元素的子集替代输出格式。如果writer完全不支持数学类型设置，则内容会被逐字插入。
+
+.. [#数学语法] 支持的LaTeX命令包含AMS扩展
+   (详见 `Short Math Guide`_).
+
+
+对于行内math，使用 :ref:`"math"角色 <roles-math>`.
+
+.. _Short Math Guide: ftp://ftp.ams.org/ams/doc/amsmath/short-math-guide.pdf
+
+.. _dt-rubric:
+
+红体
+======
+
+:Directive Type: "rubric"
+:Doctree Element: :ref:`红体 <dtr-rubric>`
+:Directive Arguments: 1, required (rubric text).
+:Directive Options: `:class:`_, `:name:`_
+:Directive Content: None.
+
+..
+
+     rubric n. 1. a title, heading, or the like, in a manuscript,
+     book, statute, etc., written or printed in red or otherwise
+     distinguished from the rest of the text. ...
+
+     -- Random House Webster's College Dictionary, 1991
+
+红字指令插入一个红字元素到文档树。红字类似与文档结构不对应的非正式的标题。
+
+.. _dt-epigraph:
+
+引言
+========
+
+:Directive Type: "epigraph"
+:Doctree Element: :ref:`引用块 <dtr-block-quote>`
+:Directive Arguments: None.
+:Directive Options: None.
+:Directive Content: 解释为引用块的正文
+
+引言是一个贴切的(合适的、恰当的或有关的)简短的铭文，通常是一个在文档或章节开头的引用或诗歌。
+
+引言指令生成一个"epigraph"类引用块。例如，这个输入::
+
+     .. epigraph::
+
+        No matter where you go, there you are.
+
+        -- Buckaroo Banzai
+
+会变为这个文档树片段::
+
+    <block_quote classes="epigraph">
+        <paragraph>
+            No matter where you go, there you are.
+        <attribution>
+            Buckaroo Banzai
+
+.. _dt-highlights:
+
+高亮
+==========
+
+:Directive Type: "highlights"
+:Doctree Element: :ref:`引用块 <dtr-block-quote>`
+:Directive Arguments: None.
+:Directive Options: None.
+:Directive Content: 解释为引用块的正文
+
+高亮总结文档或章节的要点，通常包含一个列表。
+
+高亮指令生成一个"highlights"类引用块。
+见上面的 :ref:`引言 <dt-epigraph>` 来查看类似的例子。
+
+Pull-Quote
+==========
+
+:Directive Type: "pull-quote"
+:Doctree Element: :ref:`引用块 <dtr-block-quote>`
+:Directive Arguments: None.
+:Directive Options: None.
+:Directive Content: 解释为引用块正文
+
+pull-quote是文本的一个小型选中项，"拉出来并引用"，长用于一个更大的字体。Pull-quotes用于联系注意，特别是在长文章中。
+
+"pull-quote"指令会生成一个"pull-quote"类引用块。
+见上面的 :ref:`引言 <dt-epigraph>` 来查看类似的例子。
+
+.. _dt-compound-paragraph:
+
+复合段落
+==================
+
+:Directive Type: "compound"
+:Doctree Element: :ref:`复合 <dtr-compound>`
+:Directive Arguments: None.
+:Directive Options: `:class:`_, `:name:`_
+:Directive Content: Interpreted as body elements.
+
+(Docutils 0.3.6 新增)
+
+复合指令用于创建一个复合段落，其为一个单独的逻辑段落包含多个物理正文元素，如简单段落、文本块、表格、列表等等，而非直接包含文本和行内元素。例如::
+
+    .. compound::
+
+       The 'rm' command is very dangerous.  If you are logged
+       in as root and enter ::
+
+           cd /
+           rm -rf *
+
+       you will erase the entire contents of your file system.
+
+在上面的例子中，一个文本块被嵌套在一个以一个物理段落开始并以另一个物理段落结束的句子中。
+
+.. note::
+
+   复合指令 *不是* 一个通用块级指令容器，如HTML的 ``<div>`` 元素。
+   不要用它组织一些列元素，否则结果会出乎预料。
+
+   如果需要一个通用块级容器，使用 :ref:`容器 <dt-container>` 指令。
+
+复合段落会随着变化的可能性，强调自己的逻辑
+统一，其通常会被渲染为多个不同的文本块:
+
+* 如果段落被渲染为第一行缩进，只有复合段落的第一个物理段落应该有缩进
+  第二个及之后的物理段落应当忽略缩进；
+* 物理元素之间的纵向空间可能被减少；
+* 等等。
+
+.. _dt-container:
+
+容器
+=========
+
+:Directive Type: "container"
+:Doctree Element: :ref:`容器 <dtr-container>`
+:Directive Arguments: One or more, optional (class names).
+:Directive Options: `:name:`_
+:Directive Content: 解释为正文元素
+
+(Docutils 0.3.10 新增)
+
+容器指令使用一个通用块级"容器"元素包围其内容(任意正文元素)。加上可选的 " :ref:`dt-class` " 属性参数，就是一个扩展机制(对用户及
+应用程序而言)。例如::
+
+    .. container:: custom
+
+       This paragraph might be rendered in a custom way.
+
+上面的解析结果为如下伪XML::
+
+    <container classes="custom">
+        <paragraph>
+            This paragraph might be rendered in a custom way.
+
+容器指令等价于HTML的 ``<div>`` 元素。其可以用于为用户或具体应用组织一系列元素。
+
+.. _dt-tables:
+
+--------
+ 表格
+--------
+
+正式的表格比reStructuredText语法所提供的需要更多结构。
+表格可以使用 :ref:`表格 <dtr-table>` 指令指定标题。
+有时reStructuredText表格不方便书写，或表格数据不是随手可得的标准格式。 :ref:`csv表格 <dt-csv-table>` 指令支持CSV数据。
+
+.. _dt-table:
+
+表格
+=====
+
+:Directive Type: "table"
+:Doctree Element: :ref:`表格 <dtr-table>`
+:Directive Arguments: 1, optional (table title).
+:Directive Options: `:class:`_, `:name:`_
+:Directive Content: 一个普通的reStructuredText表格
+
+(Docutils 0.3.1 新增)
+
+表格指令用于创建一个带标题的表格，需要将标题关联到表格::
+
+    .. table:: Truth table for "not"
+
+       =====  =====
+         A    not A
+       =====  =====
+       False  True
+       True   False
+       =====  =====
+
+
+.. _dt-csv-table:
+
+CSV Table
+=========
+
+:Directive Type: "csv-table"
+:Doctree Element:  :ref:`表格 <dtr-table>`
+:Directive Arguments: 1, optional (table title).
+:Directive Options: Possible (see below).
+:Directive Content: A CSV (comma-separated values) table.
+
+.. WARNING::
+
+   一个CSV(逗号分隔的值)表格
+
+.. WARNING::
+
+   "csv-table"指令的 ":file:" 和 ":url:" 选项表示一个潜在的安全漏洞。其可以使用":ref:`file_insertion_enabled <cfg-file-insertion-enabled>`" 运行时设置禁用。
+
+(Docutils 0.3.4 新增)
+
+"csv-table"指令用于通过CSV数据创建一个表格。CSV是一种由电子表格应用程序和树叶数据库生成的通用数据格式。数据可能是内部的(文件的一个组成部分)，也可能是外部的(一个单独的文件)。
+
+举例::
+
+    .. csv-table:: Frozen Delights!
+       :header: "Treat", "Quantity", "Description"
+       :widths: 15, 10, 30
+
+       "Albatross", 2.99, "On a stick!"
+       "Crunchy Frog", 1.49, "If we took the bones out, it wouldn't be
+       crunchy, now would it?"
+       "Gannet Ripple", 1.99, "On a stick!"
+
+支持单元格内的块标记和行内标记。单元格内的行结束符能被识别
+
+工作限制:
+
+* 没有提供对各行的列数是否一致的检查。但该指令通过自动添加空条目
+  支持不会在短行之后插入空条目的CSV生成器
+
+  .. 添加 "strict" 选项来验证输入?
+
+.. [#whitespace-delim] 空白分隔符只对外部CSV文件起效
+
+.. [#ASCII-char] 在Python 2中， ``delimiter``、 ``quote`` 
+   和 ``escape`` 选项必须为ASCII字符。(csv模块不支持Unicode和所有
+   非ASCII字符，即使被编码为utf-8的字符串)。该限制在Python3中不存在。
+
+下列选项可以被识别:
+
+``widths`` : 整型 [, 整型...]
+    一个逗号或空格分隔的相对列宽列表。默认等分
+
+``header-rows`` : 整型
+    表头所使用的CSV数据的行数。默认为0
+
+``stub-columns`` : 整型
+    用作行标题的列数。默认为0
+
+``header`` : CSV数据
+    为表格标题补充数据，从主CSV数据中添加独立且在其他任何之前的 ``标题行`` 。必须使用与主CSV数据相同的CSV格式。
+
+``file`` : string (newlines removed)
+    CSV数据文件的本地文件系统路径
+
+``url`` : string (whitespace removed)
+    指向一个CSV数据文件的网络URL引用
+
+``encoding`` : name of text encoding
+    扩展CSV数据(文件或URL)的文本编码。默认与文档编码相同(如果指定了)
+
+``delim`` : char | "tab" | "space" [#whitespace-delim]_
+    一个单字符字符串\ [#ASCII-char]_ 用于分隔字段。默认为 ``,`` (逗号)。可以指定为一个Unicode代码点。阅读 :ref:`unicode <dt-unicode>` 指令以获取语法细节
+
+``keepspace`` : flag
+    保留分隔符后的空格。默认忽略
+
+``escape`` : char
+    一个单字符字符串\ [#ASCII-char]_ 用于转义分隔符或引用字符。
+    可以指定为一个Unicode代码点。阅读 :ref:`unicode <dt-unicode>` 指令以获取语法细节。
+    默认为重复该字符，如"He said, ""Hi!"""
+
+    .. 添加另一个可能的值, "double", 以显式表名默认例子?
+
+也可以识别通用选项 `:class:`_ 和 `:name:`_.
+
+.. _dt-list-table:
+
+列表表格
+==========
+
+:Directive Type: "list-table"
+:Doctree Element: :ref:`表格 <dtr-table>`
+:Directive Arguments: 1, optional (table title).
+:Directive Options: Possible (see below).
+:Directive Content: 一个统一的两层无序列表
+
+(Docutils 0.3.8. 新增。只是一个初始实现， `更多想法`__ 将来可能会实现)
+
+__ ../../dev/rst/alternatives.html#list-driven-tables
+
+"list-table"指令用于从统一的两层无需列表中的数据创建一个表格。"统一"意味着每个子列表(二级列表)必须包含相同数量的列表项。
+
+例子::
+
+    .. list-table:: Frozen Delights!
+       :widths: 15 10 30
+       :header-rows: 1
+
+       * - Treat
+         - Quantity
+         - Description
+       * - Albatross
+         - 2.99
+         - On a stick!
+       * - Crunchy Frog
+         - 1.49
+         - If we took the bones out, it wouldn't be
+           crunchy, now would it?
+       * - Gannet Ripple
+         - 1.99
+         - On a stick!
+
+下列选项可以被识别:
+
+``widths`` : 整型 [整型...]
+    一个逗号或空格分隔的相对列宽列表。默认等分。
+
+``header-rows`` : 整型
+    表头所使用的CSV数据的行数。默认为0
+
+``stub-columns`` : 整型
+    用作行标题的列数。默认为0
+
+也可以识别通用选项 `:class:`_ 和 `:name:`_.
+
+.. _dt-document-parts:
+
+----------------
+ 文档部分
+----------------
+
+.. _dt-contents:
+
+目录
+=================
+
+:Directive Type: "contents"
+:Doctree Elements: :ref:`待定 <dtr-pending>`, :ref:`主题 <dtr-topic>`
+:Directive Arguments: One, optional: title.
+:Directive Options: Possible.
+:Directive Content: None.
+
+"contents"指令在 :ref:`主题 <dtr-topic>` 中生成一个目录(TOC)。主题和由此产生的目录可以出现在任何章节和过渡可以出现的地方。正文元素和主题不能包含目录。
+
+下面是该指令最简单的形式::
+
+    .. contents::
+
+语言相关的模板文本将用于标题。默认为英文
+
+可以指定一个显式标题::
+
+    .. contents:: Table of Contents
+
+标题可以跨行，但不建议这么做::
+
+    .. contents:: Here's a very long Table of
+       Contents title
+
+该指令可以使用一个字段列表指定选项::
+
+    .. contents:: Table of Contents
+       :depth: 2
+
+如果使用默认标题，选项字段列表应当与指令标记在同一行::
+
+    .. contents:: :depth: 2
+
+下列选项可以被识别:
+
+``depth`` : integer
+    目录收集的章节层级数。默认不限制深度。
+
+``local`` : flag (empty)
+    生成一个本地目录。条目只包含指定标题的章节的子标题。如果没有显式指定标题，目录没有标题。
+
+``backlinks`` : "entry" or "top" or "无"
+    生成从章节标题反向链接到目录条目、目录本身或不生成反向链接。
+
+``class`` : text
+    在主题元素上设置 :ref:`"类" <dtr-classes>` 属性值。详见 :ref:`类 <dt-class>` 指令。
+
+.. _dt-section-autonumbering:
+
+章节自动编号
+===========================
+
+:Directive Type: "sectnum" or "section-autonumbering" (synonyms)
+:Doctree Elements: :ref:`待定 <dtr-pending>`, :ref:`生成的 <dtr-generated>`
+:Directive Arguments: None.
+:Directive Options: Possible.
+:Directive Content: None.
+:Configuration Setting: sectnum_xform_
+
+"sectnum"(或"section-autonumbering")自动对文档内的章节或自章节进行编号(如果没有被命令行选项``--no-section-numbering``或 `sectnum_xform`_ 配置设置所禁用)。
+
+章节编号是自动枚举形式，每个级别有一个编号，点分隔。
+
+"sectnum"指令以两种方式工作: 初始解析和变形。
+在初始解析时，会生成一个待定元素作为占位符，存储任何内部选项。之后，待定选项触发一个变形，添加章节标题编号。章节编号在"generated"元素封闭，章节具有其"auto"属性，设置为1
+
+下列选项可以被识别:
+
+``depth`` : integer
+    编号的章节级数。默认不限定级别
+
+``prefix`` : string
+    一个任意的字符串，用于自动生成的章节编号的前缀。类似"3.2."，即产生"3.2.1"、"3.2.2"、"3.2.2.1"，等等。注意，分隔符(上例中为".")必须显式提供。默认无前缀。
+
+``suffix`` : string
+    任意字符串附加到自动生成的章节数字之后。默认没有后缀
+
+``start`` : integer
+    用于第一个章节数字的值。与前缀组合，用来使几个单独的源文件正确的编号。默认为1。
+
+.. _sectnum_xform: ../../user/config.html#sectnum-xform
+
+.. _dt--document-header-and-footer:
+
+文档标题和脚注
+========================
+
+:Directive Types: "header" and "footer"
+:Doctree Elements: :ref:`decoration <dtr-decoration>`, header, footer
+:Directive Arguments: None.
+:Directive Options: None.
+:Directive Content: 解释为正文元素
+
+(Docutils 0.3.8 新增)
+
+"header"和"footer"指令创建文档装饰，对页面导航、注解、日期时间戳等很有用。例如::
+
+    .. header:: This space for rent.
+
+这会在文档标题处添加一个段落，显示在生成页面的顶部或每个打印页面的顶部。
+
+这两个指令可以重复使用。现在只支持一个header和一个footer。
+
+.. note::
+
+   "header"和"footer"指令很可能被用来为网页创建导航元素，你应该意识到Docutils是用于 *文档* 处理的，而导航条显然不是文档的一部分。
+
+   因此，你很快会发现Docutils的不足以满足该目的。此时，你应该考虑使用一个文档生成器如 Sphinx_ 而非"header"和"footer"指令。
+
+   .. _Sphinx: http://sphinx-doc.org/
+
+另外，使用上述指令计算header和footer的内容，内容也会被处理系统自动被添加。例如，一个特定的运行时设置被开启，处理信息如一个时间戳会计算文档footer。
+
+.. _dt-references:
+
+------------
+ 引用
+------------
+
+.. _dt-target-notes:
+
+目标脚注
+================
+
+:Directive Type: "target-notes"
+:Doctree Elements: :ref:`待定 <dtr-pending>`, :ref:`脚注 <dtr-footnote>`, :ref:`脚注引用 <dtr-footnote-reference>`
+:Directive Arguments: None.
+:Directive Options: `:class:`_, `:name:`_
+:Directive Options: Possible.
+:Directive Content: None.
+
+目标脚注指令本中的每个扩展目标创建一个脚注，并将脚注引用与每个引用对应。对于文本中的每个显式目标(以 ``.. _target name:
+URL`` 的形式)，会生成包含可视URL内容的脚注。
+
+.. _dt-footnotes:
+
+脚注
+=========
+
+**尚未实现**
+
+:Directive Type: "footnotes"
+:Doctree Elements: :ref:`待定 <dtr-pending>`, :ref:`主题 <dtr-topic>`
+:Directive Arguments: None?
+:Directive Options: Possible?
+:Directive Content: None.
+
+@@@
+
+.. _dt-citations:
+
+引文
+=========
+
+**尚未实现**
+
+:Directive Type: "citations"
+:Doctree Elements: :ref:`待定 <dtr-pending>`, :ref:`主题 <dtr-topic>`
+:Directive Arguments: None?
+:Directive Options: Possible?
+:Directive Content: None.
+
+@@@
+
+.. _dt-html-specific:
+
+---------------
+ HTML特性
+---------------
+
+.. _dt-meta:
+
+元
+====
+
+:Directive Type: "meta"
+:Doctree Element: meta (非标准)
+:Directive Arguments: None.
+:Directive Options: None.
+:Directive Content: 必须包含一个平面字段列表
+
+"meta"指令用于指定存储在HTML META标签汇中的HTML元数据
+"元数据"是关于数据的数据，在这里是关于页面的数据。元数据使用一种易于搜索引擎提取和整理的形式对网络上的页面描述和分类。
+
+在该代码块中，一个平面字段列表提供了元数据语法。字段名变为META标签的"name"属性的内容，字段正文(解释为不含行内标记的单个字符串)变为"content"属性的内容。例如::
+
+    .. meta::
+       :description: The reStructuredText plaintext markup language
+       :keywords: plaintext, markup language
+
+其会转化为如下HTML::
+
+    <meta name="description"
+        content="The reStructuredText plaintext markup language">
+    <meta name="keywords" content="plaintext, markup language">
+
+对于其他META属性("http-equiv", "scheme", "lang",
+"dir")的支持由字段参数提供，该参数必须为"attr=value"形式::
+
+    .. meta::
+       :description lang=en: An amusing story
+       :description lang=fr: Une histoire amusante
+
+其HTML等价于::
+
+    <meta name="description" lang="en" content="An amusing story">
+    <meta name="description" lang="fr" content="Une histoire amusante">
+
+某些META标签使用一个"http-equiv"属性而非"name"属性。对于指定"http-equiv"META标签，可以简单的忽略名字::
+
+    .. meta::
+       :http-equiv=Content-Type: text/html; charset=ISO-8859-1
+
+HTML等价于::
+
+    <meta http-equiv="Content-Type"
+         content="text/html; charset=ISO-8859-1">
+
+.. _dt-imagemap:
+
+图片映射
+========
+
+**尚未实现**
+
+非标准元素: imagemap.
+
+.. _dt-substitution-definitions:
+
+-----------------------------------------
+ 替代定义指令
+-----------------------------------------
+
+本章的指令只能用于替代定义。它们不能在一个孤立的上下文中直接使用。 :ref:`图片 <dtr-image>` 指令可以用于替代定义或孤立的上下文。
+
+
+.. _dt-replacement-text:
+
+替代文本
+================
+
+:Directive Type: "replace"
+:Doctree Element: 文本和 :ref:`行内文本 <dtr-inline-elements>`
+:Directive Arguments: None.
+:Directive Options: None.
+:Directive Content: 一个单行段落，可以包含行内标记
+
+"replace"指令用于为替代定义展示替代文本。它只能用在替代定义中。例如，该指令可以用于扩展缩写::
+
+    .. |reST| replace:: reStructuredText
+
+    Yes, |reST| is a long word, so I can't blame anyone for wanting to
+    abbreviate it.
+
+因为reStructuredText不支持嵌套行内标记，唯一的创建使用风格化文本的一个引用的方法是使用替代指令::
+
+    I recommend you try |Python|_.
+
+    .. |Python| replace:: Python, *the* best language around
+    .. _Python: http://www.python.org/
+
+
+.. _dt-unicode:
+
+Unicode字符编码
+=======================
+
+:Directive Type: "unicode"
+:Doctree Element: Text
+:Directive Arguments: One or more, required (Unicode character codes,
+                      optional text, and comments).
+:Directive Options: Possible.
+:Directive Content: None.
+
+The "unicode" directive converts Unicode character codes (numerical
+values) to characters, and may be used in substitution definitions
+only.
+
+"unicode"指令转换Unicode字符代码(数值)到字符，仅用于替代定义。
+
+参数以空格分隔，可以为:
+
+* **字符代码** 作为
+
+  - 十进制数
+
+  - 以 ``0x``, ``x``, ``\x``, ``U+``,
+    ``u``, or ``\u`` 为前缀的十六进制数或XML风格的十六进制字符实体。如 ``&#x1a2b;``
+
+* **文本**, 用途就是文本
+
+文本跟在" .. "之后是注释，其会被忽略。参数之间的空格会被忽略，因此不会出现在输出中。十六进制代码大小写不敏感。
+
+例如，下列文本::
+
+    Copyright |copy| 2003, |BogusMegaCorp (TM)| |---|
+    all rights reserved.
+
+    .. |copy| unicode:: 0xA9 .. copyright sign
+    .. |BogusMegaCorp (TM)| unicode:: BogusMegaCorp U+2122
+       .. with trademark sign
+    .. |---| unicode:: U+02014 .. em dash
+       :trim:
+
+结果是:
+
+    Copyright |copy| 2003, |BogusMegaCorp (TM)| |---|
+    all rights reserved.
+
+    .. |copy| unicode:: 0xA9 .. copyright sign
+    .. |BogusMegaCorp (TM)| unicode:: BogusMegaCorp U+2122
+       .. with trademark sign
+    .. |---| unicode:: U+02014 .. em dash
+       :trim:
+
+下列选项可以被识别:
+
+``ltrim`` : flag
+    替代引用左边的空格会被删除
+
+``rtrim`` : flag
+    替代引用右边的空格会被删除
+
+``trim`` : flag
+    等价于 ``ltrim`` + ``rtrim`` 。两端的空格都会被删除。
+
+.. _dt-date:
+
+日期
+====
+
+:Directive Type: "date"
+:Doctree Element: Text
+:Directive Arguments: One, optional (date format).
+:Directive Options: None.
+:Directive Content: None.
+
+"date"指令生成当前本地日期，并作为文本插入文档。该指令只能用于替代定义。
+
+可选的指令内容被解释为所需的日期格式，使用与Python的time.strftime函数相同的代码。默认格式为"%Y-%m-%d"(ISO 8601 date)，但时间字段也可以使用。例如::
+
+    .. |date| date::
+    .. |time| date:: %H:%M
+
+    Today's date is |date|.
+
+    This document was generated on |date| at |time|.
+
+.. _dt-miscellaneous:
+
+---------------
+ 杂项
+---------------
+
+.. _dt-include:
+
+包含一个额外的文档片段
+=======================================
+
+:Directive Type: "include"
+:Doctree Elements: Depend on data being included
+                   ( :ref:`literal_block <dtr-literal-block>` with ``code`` or ``literal`` option).
+:Directive Arguments: One, required (path to the file to include).
+:Directive Options: Possible.
+:Directive Content: None.
+:Configuration Setting: :ref:`file_insertion_enabled <cfg-file-insertion-enabled>`
+
+.. WARNING::
+
+   "include"指令存在一个潜在的安全漏洞。它能被":ref:`file_insertion_enabled <cfg-file-insertion-enabled>`"运行时设置所禁用。
+
+"include"指令读取一个文本文件。该指令的参数是文件的相对路径。除非指定选项 ``literal`` 或 ``code`` ，否则文件会根据指令所在的当前文档上下文来解析。例如::
+
+    第一个例子会以文档级别解析，因此可以包含结构及章节标题
+
+    .. include:: inclusion.txt
+
+    回到主文档
+
+        这是第二个例子，它会在一个引用块上下文中解析。
+        因此它只能包含正文元素，而不能包含章节标题。
+
+        .. include:: inclusion.txt
+
+如果一个被包含文档片段包含章节结构，标题装饰必须与主文档的相匹配。
+
+准备列入文档的标准数据文件会与Docutils源码一起被发布，位置在 ``docutils/parsers/rst/include`` 文件夹的"docutils"包。想要访问这些文件，使用标准"include"数据文件的专门语法 -- 尖括号包裹文件名::
+
+    .. include:: <isonum.txt>
+
+标准"include"数据文件的当前集合包含替代定义的集合。详见 `reStructuredText标准定义文件`__ 。
+
+__ definitions.html
+
+下列选项可以被识别:
+
+``start-line`` : integer
+    只有从这一行开始的内容会被包含(与在Python中一样，第一行索引为0)
+
+``end-line`` : integer
+    内容到这一行结束（不包括本行）
+
+``start-after`` : 需要在扩展数据文件中查找的文本
+    查找到的文本之后的文件会被包含
+
+``end-before`` : 需要在扩展数据文件中查找的文本
+    查找到的文件之前的文件会被包含
+
+``literal`` : flag (empty)
+    整个被包含文件会被当做一个单独的文本块插入文档
+
+``code`` : 正式的语言 (optional)
+    参数及被包含文件的内容会被传递给 :ref:`代码 <dt-code>` 指令(对于程序列表很有用).
+    (Docutils 0.9 新增)
+
+``number-lines`` : [start line number]
+    为每行代码添加行号。
+    可选参数为行号开始的数字(默认为1)。
+    只有在 ``code`` 或 ``literal`` 中有效。
+    (Docutils 0.9 新增)
+
+``encoding`` : 文本编码名称
+    扩展数据文件的文本编码。默认为文档的 ref:`输入编码 <cfg-input-encoding>`.
+
+``tab-width`` :  integer
+    用于制表符代表的空格数。 
+    复数表示不扩展。默认同 :ref:`tab_width <cfg-tab-width>` 配置设置.
+
+
+使用 ``code`` 或 ``literal`` 时通用选项 `:class:`_ 和
+`:name:`_ 也能被识别
+
+可以组合使用 ``start/end-line`` 和 ``start-after/end-before`` 。文本标记会在指定行辈搜索(进一步显示包含的内容)。
+
+.. _dt-raw-data-pass-through:
+
+原生数据传递
+=====================
+
+:Directive Type: "raw"
+:Doctree Element: :ref:`raw <dtr-raw>`
+:Directive Arguments: One or more, required (output format types).
+:Directive Options: Possible.
+:Directive Content: Stored verbatim, uninterpreted.  None (empty) if a
+                    "file" or "url" option given.
+:Configuration Setting: :ref:`raw_enabled <cfg-raw-enabled>`
+
+.. WARNING::
+
+   "raw"指令存在一个潜在漏洞。其能够被 :ref:`raw_enabled <cfg-raw-enabled>` 或 ":ref:`file_insertion_enabled <cfg-file-insertion-enabled>`" 禁用
+
+.. Caution::
+
+   "raw"指令是一个一个权宜之计，允许作者绕过reStructuredText的标记。它是一个不应当滥用的功能。使用"raw"会将文档绑定到一个指定的输出格式，从而降低其兼容性。
+
+   如果你需要经常使用"raw"指令或一个"raw"分隔的解释文本角色，即表示滥用或该功能可能在reStructuredText中遗失。请将具体情况发送信息到 :ref:`Docutils用户 <dml-docutils-users>` 邮件列表。
+
+"raw"指令表示将被非接触式传递给Writer的非reStructuredText数据。应当在指令参数中指定输出格式名称。raw数据的解释由Writer负责。一个Write可能会忽略任何不匹配该格式的raw输出。
+
+例如，如下输入会被非接触的传递给一个HTML Writer::
+
+    .. raw:: html
+
+       <hr width=50 size=10>
+
+一个LaTeX Writer可以插入如下raw内容到其输出流::
+
+    .. raw:: latex
+
+       \setlength{\parindent}{0pt}
+
+Raw数据也可以作为一个扩展文件读入，在一个指令选项中指定。此时，内容块必须为空。例如::
+
+    .. raw:: html
+       :file: inclusion.html
+
+行内等价指令可以通过由 :ref:`"raw"角色 <roles-raw>` 衍生的 :ref:`自定义解释文本角色 <dt-custom-interpreted-text-roles>` 来定义。
+
+下列选项可以被识别:
+
+``file`` : 字符串(移除新行)
+    一个需要包含的raw数据文件的本地文件系统路径
+
+``url`` : 字符串(移除空格)
+    一个到需要被包含的raw数据文件的网络URL引用。
+
+``encoding`` : 文本编码的名称
+    扩展raw数据(file或url)的文本编码。默认与文档编码相同(如果指定了)
+
+
+.. _dt-class:
+
+类
+=====
+
+:Directive Type: "class"
+:Doctree Element: :ref:`待定 <dtr-pending>`
+:Directive Arguments: One or more, required (class names / attribute
+                      values).
+:Directive Options: None.
+:Directive Content: Optional.  If present, it is interpreted as body
+                    elements.
+
+"class"指令在其内容中或紧跟的第一个非注释元素 [#]_ 中设置 :ref:`"类" <dtr-classes>` 属性值。详见其 :ref:`Docutils文档树 <dtr>` 中的 :ref:`条目 <dtr-classes>` 。
+
+指令参数包含一个或多个空格分隔的类名。类名会被转换以符合正则表达式 
+``[a-z](-?[a-z0-9]+)*`` 
+
+* 小写字母字符
+* 重音字符的基本字符
+* 非字母字符到连线符
+* 连续的连线符
+
+例如"Rot-Gelb.Blau Grün:+2008"会变为"rot-gelb-blau grun-2008"。
+(详见下面的 :ref:`理论基础 <dt-rationale>`)
+
+例子::
+
+    .. class:: special
+
+    This is a "special" paragraph.
+
+    .. class:: exceptional remarkable
+
+    An Exceptional Section
+    ======================
+
+    This is an ordinary paragraph.
+
+    .. class:: multiple
+
+       First paragraph.
+
+       Second paragraph.
+
+上面的文本被解析并转换为如下文档树片段::
+
+    <paragraph classes="special">
+        This is a "special" paragraph.
+    <section classes="exceptional remarkable">
+        <title>
+            An Exceptional Section
+        <paragraph>
+            This is an ordinary paragraph.
+        <paragraph classes="multiple">
+            First paragraph.
+        <paragraph classes="multiple">
+            Second paragraph.
+
+.. [#] 需要在引用块中设置"classes"属性值，"class"指令之后必须跟
+       空注释::
+
+       .. class:: highlights
+       ..
+
+           Block quote text.
+
+   没有空注释，缩进文本会被解释为"class"指令的内容，类会单独提供给每个元素(本例中为段落)，而非整个引用块。
+
+.. _dt-rationale:
+
+.. topic:: "classes"属性值转换的理论基础
+
+    Docutils识别符会被转变为满足正则表达式 ``[a-z](-?[a-z0-9]+)*``. 为了 HTML + CSS 兼容性，识别符("classes"和"id"属性)应当没有下划线、冒号或点。连字符可以使用。
+
+    - `HTML 4.01 spec`_ 定义了基于SGML令牌的识别符:
+
+          ID和NAME令牌必须以字母([A-Za-z])开始且之后可以跟任何字母、数字([0-9])、连字符("-")、下划线("_")、冒号(":")和点(".")。
+
+     - `CSS1 spec`_ 定义了基于"name"令牌的识别符("flex" tokenizer notation below; "latin1" 和 "escape" 8位字符被替换为XML实体)::
+
+          unicode     \\[0-9a-f]{1,4}
+          latin1      [&iexcl;-&yuml;]
+          escape      {unicode}|\\[ -~&iexcl;-&yuml;]
+          nmchar      [-A-Za-z0-9]|{latin1}|{escape}
+          name        {nmchar}+
+
+    CSS规则不包含下划线("_")、冒号(":")或点(".")，因此"classes"和"id"属性不应包含这些字符。组合HTML的需求(第一个字符必须是字母，不能是"unicode"、"latin1"或"escape"字符)，正则结果为 ``[A-Za-z][-A-Za-z0-9]*`` 。Docutils添加了正常化的小写以连线符连接的字符。
+
+    .. _HTML 4.01 spec: http://www.w3.org/TR/html401/
+    .. _CSS1 spec: http://www.w3.org/TR/REC-CSS1
+
+
+.. _dt-custom-interpreted-text-roles:
+
+自定义解释文本角色
+=============================
+
+:Directive Type: "role"
+:Doctree Element: None; affects subsequent parsing.
+:Directive Arguments: Two; one required (new role name), one optional
+                      (base role name, in parentheses).
+:Directive Options: Possible (depends on base role).
+:Directive Content: depends on base role.
+
+(Docutils 0.3.2 新增)
+
+"role"指令会动态创建一个自定义解释文本角色并将其注册到解析器。这意味着在像这样声明一个角色后::
+
+    .. role:: custom
+
+文档可以使用新的"custom"角色::
+
+    An example of using :custom:`interpreted text`
+
+其会被解析到如下文档树片段::
+
+    <paragraph>
+        An example of using
+        <inline classes="custom">
+            interpreted text
+
+角色必须在文档中声明才能使用。
+
+新角色可以基于已有的角色，通过在括号中指定第二个参数(空格可选)::
+
+    .. role:: custom(emphasis)
+
+    :custom:`text`
+
+解析结果为::
+
+    <paragraph>
+        <emphasis classes="custom">
+            text
+
+一个特例是 :ref:`"raw"角色 <roles-raw>`: 衍生角色启用行内 :ref:`原生数据传递 <dt-raw-data-pass-through>` ，如::
+
+   .. role:: raw-role(raw)
+      :format: html latex
+
+   :raw-role:`raw text`
+
+如果未显式指定基角色，则会自动使用一个通用自定义角色。接着解释文本会生成一个使用 :ref:`"类" <dtr-classes>` 属性的"inline"元素，见上面第一个例子。
+
+对于大部分角色， ":class:" 选项可以用来设置一个与角色名称
+不一样的"classes"属性。例如::
+
+    .. role:: custom
+       :class: special
+
+    :custom:`interpreted text`
+
+这是解析结果::
+
+    <paragraph>
+        <inline classes="special">
+            interpreted text
+
+.. _role class:
+
+对于大部分节本角色，下列选项可以被"role"角色识别:
+
+``class`` : text
+    当使用自定义解释文本角色时，设置生成的元素(``行内`` 或与基类相关的元素)的 :ref:`"类" <dtr-classes>` 属性值。如果不指定指令选项，一个包含指令参数(角色名称)的"class"选项会被作为值提供。见上面的 :ref:`类 <dt-class>` 指令。
+
+指定及角色可以支持其他选项和/或指令内容。详见 :ref:`reStructuredText解释文本角色 <roles>` 。
+
+
+.. _dt-setting-the-default-interpreted-text-role:
+
+设置默认解释文本角色
+=========================================
+
+:Directive Type: "default-role"
+:Doctree Element: 无；影响后续解析
+:Directive Arguments: One, optional (new default role name).
+:Directive Options: None.
+:Directive Content: None.
+
+(Docutils 0.3.10 新增)
+
+"default-role"指令设置默认解释文本角色，解释文本使用的角色无需一个显式角色。例如，在这样设置默认角色之后::
+
+    .. default-role:: subscript
+
+其后文档中任何隐式角色解释文本都会使用"subscript"角色::
+
+    An example of a `default` role.
+
+其会被解析到如下文档树片段::
+
+    <paragraph>
+        An example of a
+        <subscript>
+            default
+         role.
+
+自定义角色必须先声明后使用，声明后才能作为默认角色。(参考上述 :ref:`role <dt-custom-interpreted-text-roles>` 指令)。阅读 :ref:`reStructuredText解释文本角色 <roles>` 文档以获取内建角色的细节。
+
+该指令可以不带用于存储初始化的参数使用，这取决于应用。标准reStructuredText解释器的初始默认解释文本角色为"title-reference"。
+
+.. _dt-metadata-document-title:
+
+元数据文档标题
+=======================
+
+:Directive Type: "title"
+:Doctree Element: None.
+:Directive Arguments: 1, required (the title text).
+:Directive Options: None.
+:Directive Content: None.
+
+"title"指令指定文档标题作为元数据，其不会变为文档正文的一部分。其会覆写文档提供的标题。例如，在HTML输出中元数据文档标题会呈现在浏览器标题栏中。
+
+.. _dt-restructuredtext-test-directive:
+
+Restructuredtext测试指令
+===============================
+
+:Directive Type: "restructuredtext-test-directive"
+:Doctree Element: system_warning
+:Directive Arguments: None.
+:Directive Options: None.
+:Directive Content: 解释为一个文本块
+
+该指令仅用于测试(谁也不会愿意输入 *那么* 长的名字)。其会被转换为一个展示指令数据的一级系统信息(info)，其后可以跟一个包含指令块剩余部分的文本块。
+
+.. _dt-common-options:
+
+--------------
+通用选项
+--------------
+
+大部分生成文档树元素的指令支持如下选项:
+
+_`:class:` : 文本
+    设置由指令生成的文档树元素上的一个 :ref:`"类" <dtr-classes>` 属性值。参见 :ref:`类 <dt-class>` 指令。
+
+_`:name:` : 文本
+    添加文本到由指令生成的文档树元素上的一个 :ref:`"名称" <dtr-names>` 属性。其允许指向元素的 :ref:`超链接引用 <rst-hyperlink-references>` 使用文本作为 :ref:`引用名称 <rst-reference-names>`.
+
+    指定指令的 `name` 选项，例如::
+
+      .. image:: bild.png
+         :name: my picture
+
+    是一个间接与法替代在前面添加一个 :ref:`超链接目标 <rst-hyperlinks-targets>`::
+
+      .. _my picture:
+
+      .. image:: bild.png
+
+    Docutils 0.8. 新增
+
+.. _Python图片库: http://www.pythonware.com/products/pil/
+
+
+..
+   Local Variables:
+   mode: indented-text
+   indent-tabs-mode: nil
+   sentence-end-double-space: t
+   fill-column: 100
+   End:
